@@ -1,0 +1,30 @@
+{
+  "name": "cinemaflix-movie-app",
+  "version": "1.0.0",
+  "description": "Full-stack MERN movie streaming application with admin dashboard",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "client": "npm run dev --workspace=client",
+    "server": "npm run dev --workspace=server",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install:all": "npm install && npm install --workspace=client && npm install --workspace=server"
+  },
+  "keywords": [
+    "movie",
+    "streaming",
+    "MERN",
+    "react",
+    "mongodb",
+    "express",
+    "node"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
