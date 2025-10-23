@@ -7,6 +7,14 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Explicitly define plugins (prevents UI-added incompatible plugins)
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+  
+  [plugins.inputs]
+    # Optional: Configure Lighthouse settings
+    # thresholds.performance = 0.9
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

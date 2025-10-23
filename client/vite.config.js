@@ -5,7 +5,8 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/moview-watch/', // GitHub Pages base URL
+  // Use '/' for Netlify, '/moview-watch/' for GitHub Pages
+  base: process.env.GITHUB_PAGES === 'true' ? '/moview-watch/' : '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
