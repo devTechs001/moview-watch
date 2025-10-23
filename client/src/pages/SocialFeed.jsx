@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Users, Heart, MessageCircle, Eye, Share2, TrendingUp } from 'lucide-react'
-import Navbar from '../components/Navbar'
+import { Users, Heart, MessageCircle, Eye, Share2, TrendingUp, Plus } from 'lucide-react'
+import Layout from '../components/Layout'
 import { Card, CardContent } from '../components/ui/Card'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
@@ -58,10 +58,15 @@ const SocialFeed = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <Layout>
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <h1 className="text-4xl font-bold mb-8">Social Feed</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-4xl font-bold">Social Feed</h1>
+          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+            <Plus className="w-5 h-5" />
+            Post
+          </button>
+        </div>
 
         {loading ? (
           <div className="space-y-4">
@@ -91,7 +96,7 @@ const SocialFeed = () => {
           </div>
         )}
       </div>
-    </div>
+    </Layout>
   )
 }
 

@@ -1,15 +1,44 @@
 import { Link } from 'react-router-dom'
-import { Heart, Star, Play } from 'lucide-react'
+import { Heart, Star, Play, Share2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { formatNumber } from '../lib/utils'
+import axios from '../lib/axios'
+import toast from 'react-hot-toast'
 
 const MovieCard = ({ movie }) => {
   const [isLiked, setIsLiked] = useState(false)
+  const [likes, setLikes] = useState(movie.likes || 0)
 
-  const handleLike = (e) => {
+  const handleLike = async (e) => {
     e.preventDefault()
-    setIsLiked(!isLiked)
+    try {
+      const response = await axios.put(`/movies/${movie._id}/like`)
+      setLikes(response.data.likes)
+      setIsLiked(!isLiked)
+      toast.success(isLiked ? 'Removed from likes' : 'Added to likes!')
+    } catch (error) {
+      console.error('Error liking movie:', error)
+      // Optimistic update for demo
+      setIsLiked(!isLiked)
+      setLikes(prev => isLiked ? prev - 1 : prev + 1)
+    }
+  }
+
+  const handleShare = (e) => {
+    e.preventDefault()
+    const url = `${window.location.origin}/movie/${movie._id}`
+    
+    if (navigator.share) {
+      navigator.share({
+        title: movie.title,
+        text: `Check out ${movie.title}!`,
+        url: url,
+      }).catch(() => {})
+    } else {
+      navigator.clipboard.writeText(url)
+      toast.success('Link copied to clipboard!')
+    }
   }
 
   return (
@@ -42,15 +71,25 @@ const MovieCard = ({ movie }) => {
               </div>
             </div>
 
-            {/* Like Button */}
-            <button
-              onClick={handleLike}
-              className="absolute top-2 right-2 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors z-10"
-            >
-              <Heart
-                className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`}
-              />
-            </button>
+            {/* Action Buttons */}
+            <div className="absolute top-2 right-2 flex gap-2 z-10">
+              <button
+                onClick={handleShare}
+                className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
+                title="Share"
+              >
+                <Share2 className="w-5 h-5 text-white" />
+              </button>
+              <button
+                onClick={handleLike}
+                className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors"
+                title={isLiked ? 'Unlike' : 'Like'}
+              >
+                <Heart
+                  className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`}
+                />
+              </button>
+            </div>
 
             {/* Rating Badge */}
             {movie.rating && (
@@ -76,7 +115,7 @@ const MovieCard = ({ movie }) => {
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Heart className="w-4 h-4" />
-                <span>{formatNumber(movie.likes || 0)}</span>
+                <span>{formatNumber(likes)}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Play className="w-4 h-4" />

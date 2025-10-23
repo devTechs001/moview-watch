@@ -6,11 +6,11 @@ import {
   importMovieFromTMDB,
   getGenres,
 } from '../controllers/tmdbController.js'
-import { protect, admin } from '../middleware/auth.js'
+import { protect, adminOnly } from '../middleware/auth.js'
 
 const router = express.Router()
 
-router.use(protect, admin)
+router.use(protect, adminOnly)
 
 router.post('/fetch-popular', fetchPopularMovies)
 router.post('/fetch-trending', fetchTrendingMovies)

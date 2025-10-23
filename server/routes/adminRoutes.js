@@ -5,11 +5,11 @@ import {
   updateUser,
   deleteUser,
 } from '../controllers/adminController.js'
-import { protect, admin } from '../middleware/auth.js'
+import { protect, adminOnly } from '../middleware/auth.js'
 
 const router = express.Router()
 
-router.use(protect, admin)
+router.use(protect, adminOnly)
 
 router.get('/stats', getStats)
 router.route('/users').get(getAllUsers)

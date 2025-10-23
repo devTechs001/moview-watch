@@ -39,6 +39,29 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    contactInfo: {
+      phone: String,
+      whatsapp: String,
+      telegram: String,
+      twitter: String,
+      instagram: String,
+      facebook: String,
+      website: String,
+    },
+    visibility: {
+      showEmail: {
+        type: Boolean,
+        default: false,
+      },
+      showPhone: {
+        type: Boolean,
+        default: false,
+      },
+      showSocial: {
+        type: Boolean,
+        default: true,
+      },
+    },
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -92,6 +115,10 @@ const userSchema = new mongoose.Schema(
         },
         showWatchHistory: { type: Boolean, default: true },
       },
+    },
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Subscription',
     },
   },
   {

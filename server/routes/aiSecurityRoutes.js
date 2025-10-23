@@ -6,11 +6,11 @@ import {
   resolveSecurityEvent,
   getAnomalies,
 } from '../controllers/aiSecurityController.js'
-import { protect, admin } from '../middleware/auth.js'
+import { protect, adminOnly } from '../middleware/auth.js'
 
 const router = express.Router()
 
-router.use(protect, admin)
+router.use(protect, adminOnly)
 
 router.get('/dashboard', getSecurityDashboard)
 router.route('/events').post(logSecurityEvent)

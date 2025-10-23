@@ -21,7 +21,18 @@ import ProfilePage from './pages/ProfilePage'
 import SettingsPage from './pages/SettingsPage'
 import ChatPage from './pages/ChatPage'
 import SocialFeed from './pages/SocialFeed'
+import EnhancedSocialFeed from './pages/EnhancedSocialFeed'
 import StoriesPage from './pages/StoriesPage'
+import TrendingPage from './pages/TrendingPage'
+import MoviesPage from './pages/MoviesPage'
+import WatchLaterPage from './pages/WatchLaterPage'
+import HistoryPage from './pages/HistoryPage'
+import SubscriptionPage from './pages/SubscriptionPage'
+import BillingPage from './pages/BillingPage'
+import ChatroomsPage from './pages/ChatroomsPage'
+import ChatroomView from './pages/ChatroomView'
+import PaymentPage from './pages/PaymentPage'
+import InvitePage from './pages/InvitePage'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -30,6 +41,7 @@ import AdminUsers from './pages/admin/AdminUsers'
 import AdminSettings from './pages/admin/AdminSettings'
 import AISecurityDashboard from './pages/admin/AISecurityDashboard'
 import TMDBImporter from './pages/admin/TMDBImporter'
+import AdminSubscriptions from './pages/admin/AdminSubscriptions'
 
 function App() {
   const [showSplash, setShowSplash] = useState(true)
@@ -114,6 +126,11 @@ function App() {
         } />
         <Route path="/social" element={
           <ProtectedRoute>
+            <EnhancedSocialFeed />
+          </ProtectedRoute>
+        } />
+        <Route path="/social-old" element={
+          <ProtectedRoute>
             <SocialFeed />
           </ProtectedRoute>
         } />
@@ -122,6 +139,52 @@ function App() {
             <StoriesPage />
           </ProtectedRoute>
         } />
+        <Route path="/trending" element={
+          <ProtectedRoute>
+            <TrendingPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/movies" element={
+          <ProtectedRoute>
+            <MoviesPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/watch-later" element={
+          <ProtectedRoute>
+            <WatchLaterPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/history" element={
+          <ProtectedRoute>
+            <HistoryPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/subscription" element={
+          <ProtectedRoute>
+            <SubscriptionPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/billing" element={
+          <ProtectedRoute>
+            <BillingPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/chatrooms" element={
+          <ProtectedRoute>
+            <ChatroomsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/chatroom/:roomId" element={
+          <ProtectedRoute>
+            <ChatroomView />
+          </ProtectedRoute>
+        } />
+        <Route path="/payment" element={
+          <ProtectedRoute>
+            <PaymentPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/invite/:code" element={<InvitePage />} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={
@@ -152,6 +215,11 @@ function App() {
         <Route path="/admin/import-movies" element={
           <AdminRoute>
             <TMDBImporter />
+          </AdminRoute>
+        } />
+        <Route path="/admin/subscriptions" element={
+          <AdminRoute>
+            <AdminSubscriptions />
           </AdminRoute>
         } />
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, X, Heart, Eye } from 'lucide-react'
-import Navbar from '../components/Navbar'
+import Layout from '../components/Layout'
+import CreateStoryModal from '../components/CreateStoryModal'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import axios from '../lib/axios'
@@ -11,6 +12,7 @@ const StoriesPage = () => {
   const [stories, setStories] = useState([])
   const [selectedStory, setSelectedStory] = useState(null)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     fetchStories()
@@ -40,13 +42,19 @@ const StoriesPage = () => {
     }
   }
 
+  const handleStoryCreated = (newStory) => {
+    fetchStories() // Refresh stories
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Stories</h1>
-          <Button className="flex items-center gap-2"><Plus className="w-5 h-5" />Add Story</Button>
+          <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            Add Story
+          </Button>
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-4">
@@ -85,8 +93,14 @@ const StoriesPage = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <CreateStoryModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onStoryCreated={handleStoryCreated}
+        />
       </div>
-    </div>
+    </Layout>
   )
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, Film, Star } from 'lucide-react'
-import Navbar from '../components/Navbar'
+import Layout from '../components/Layout'
 import MovieCard from '../components/MovieCard'
 import axios from '../lib/axios'
 
@@ -44,9 +44,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-
+    <Layout>
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <motion.div
@@ -164,7 +162,7 @@ const HomePage = () => {
           </div>
         </div>
       </main>
-    </div>
+    </Layout>
   )
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Film, Users, TrendingUp, DollarSign, Eye, Heart, MessageCircle, Star } from 'lucide-react'
-import Navbar from '../../components/Navbar'
+import AdminLayout from '../../components/AdminLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 
@@ -29,9 +29,7 @@ const AdminDashboard = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -195,7 +193,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AdminLayout>
   )
 }
 

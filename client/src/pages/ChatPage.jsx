@@ -1,17 +1,23 @@
 import { useState, useEffect, useRef } from 'react'
-import { Send, Phone, Video, MoreVertical, Search, Smile } from 'lucide-react'
-import Navbar from '../components/Navbar'
+import { Send, Phone, Video, MoreVertical, Search, Smile, Paperclip, Mic } from 'lucide-react'
+import Layout from '../components/Layout'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { getInitials } from '../lib/utils'
+import { useAuthStore } from '../store/authStore'
+import { io } from 'socket.io-client'
+import { SOCKET_URL } from '../lib/utils'
 
 const ChatPage = () => {
   const [selectedUser, setSelectedUser] = useState(null)
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
+  const [socket, setSocket] = useState(null)
+  const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef(null)
+  const { user } = useAuthStore()
 
   const contacts = [
     { id: 1, name: 'John Doe', avatar: '', status: 'online', lastMessage: 'Hey, have you seen the latest movie?', time: '2m ago' },
@@ -19,6 +25,37 @@ const ChatPage = () => {
     { id: 3, name: 'Mike Johnson', avatar: '', status: 'online', lastMessage: 'Want to watch together?', time: '3h ago' },
     { id: 4, name: 'Sarah Williams', avatar: '', status: 'online', lastMessage: 'I just added it to my wishlist', time: '1d ago' },
   ]
+
+  // Initialize Socket.io connection
+  useEffect(() => {
+    const newSocket = io(SOCKET_URL)
+    setSocket(newSocket)
+
+    // Join user's chat room
+    if (user?._id) {
+      newSocket.emit('join-chat', user._id)
+    }
+
+    // Listen for incoming messages
+    newSocket.on('receive-message', (data) => {
+      setMessages((prev) => [...prev, {
+        id: Date.now(),
+        text: data.text,
+        sender: 'other',
+        timestamp: new Date(data.timestamp),
+      }])
+    })
+
+    // Listen for typing indicator
+    newSocket.on('user-typing', (data) => {
+      setIsTyping(true)
+      setTimeout(() => setIsTyping(false), 3000)
+    })
+
+    return () => {
+      newSocket.disconnect()
+    }
+  }, [user])
 
   useEffect(() => {
     if (selectedUser) {
@@ -42,24 +79,41 @@ const ChatPage = () => {
 
   const handleSendMessage = (e) => {
     e.preventDefault()
-    if (!message.trim()) return
+    if (!message.trim() || !selectedUser) return
 
     const newMessage = {
-      id: messages.length + 1,
+      id: Date.now(),
       text: message,
       sender: 'me',
       timestamp: new Date(),
     }
 
     setMessages([...messages, newMessage])
+
+    // Send via Socket.io
+    if (socket) {
+      socket.emit('send-message', {
+        recipientId: selectedUser.id,
+        text: message,
+        senderId: user?._id,
+      })
+    }
+
     setMessage('')
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+  const handleTyping = () => {
+    if (socket && selectedUser) {
+      socket.emit('typing', {
+        recipientId: selectedUser.id,
+        senderId: user?._id,
+      })
+    }
+  }
 
-      <div className="container mx-auto px-4 py-8 h-[calc(100vh-120px)]">
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-4 h-[calc(100vh-120px)]">
         <div className="grid grid-cols-12 gap-6 h-full">
           {/* Contacts Sidebar */}
           <div className="col-span-12 md:col-span-4 lg:col-span-3">
@@ -164,18 +218,31 @@ const ChatPage = () => {
                 {/* Message Input */}
                 <form onSubmit={handleSendMessage} className="p-4 border-t">
                   <div className="flex items-center gap-2">
-                    <Button type="button" variant="ghost" size="icon">
+                    <Button type="button" variant="ghost" size="icon" title="Attach file">
+                      <Paperclip className="w-5 h-5" />
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon" title="Emoji">
                       <Smile className="w-5 h-5" />
                     </Button>
                     <Input
                       value={message}
-                      onChange={(e) => setMessage(e.target.value)}
+                      onChange={(e) => {
+                        setMessage(e.target.value)
+                        handleTyping()
+                      }}
                       placeholder="Type a message..."
                       className="flex-1"
+                      autoFocus
                     />
-                    <Button type="submit" size="icon" disabled={!message.trim()}>
-                      <Send className="w-5 h-5" />
-                    </Button>
+                    {message.trim() ? (
+                      <Button type="submit" size="icon">
+                        <Send className="w-5 h-5" />
+                      </Button>
+                    ) : (
+                      <Button type="button" variant="ghost" size="icon" title="Voice message">
+                        <Mic className="w-5 h-5" />
+                      </Button>
+                    )}
                   </div>
                 </form>
               </Card>
@@ -191,7 +258,7 @@ const ChatPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   )
 }
 

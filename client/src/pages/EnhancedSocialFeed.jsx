@@ -1,0 +1,362 @@
+import { useState, useEffect, useRef } from 'react'
+import { Heart, MessageCircle, Share2, Send, MoreVertical, Image as ImageIcon, Video, X } from 'lucide-react'
+import Layout from '../components/Layout'
+import { Card, CardContent } from '../components/ui/Card'
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import axios from '../lib/axios'
+import { useAuthStore } from '../store/authStore'
+import { getInitials, formatDate } from '../lib/utils'
+import toast from 'react-hot-toast'
+import { io } from 'socket.io-client'
+
+const EnhancedSocialFeed = () => {
+  const { user } = useAuthStore()
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [newPostContent, setNewPostContent] = useState('')
+  const [socket, setSocket] = useState(null)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+
+  useEffect(() => {
+    fetchPosts()
+    
+    // Setup Socket.io
+    const newSocket = io('http://localhost:5000')
+    setSocket(newSocket)
+
+    // Listen for real-time updates
+    newSocket.on('new_post', (post) => {
+      setPosts(prev => [post, ...prev])
+    })
+
+    newSocket.on('post_liked', ({ postId, likeCount }) => {
+      setPosts(prev => prev.map(p => 
+        p._id === postId ? { ...p, likeCount, likes: Array(likeCount).fill(null) } : p
+      ))
+    })
+
+    newSocket.on('post_commented', ({ postId, comment, commentCount }) => {
+      setPosts(prev => prev.map(p => 
+        p._id === postId ? { ...p, commentCount, comments: [comment, ...p.comments] } : p
+      ))
+    })
+
+    newSocket.on('post_shared', ({ postId, shareCount }) => {
+      setPosts(prev => prev.map(p => 
+        p._id === postId ? { ...p, shareCount } : p
+      ))
+    })
+
+    return () => newSocket.disconnect()
+  }, [])
+
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get(`/posts?page=${page}&limit=10`)
+      setPosts(prev => page === 1 ? response.data.posts : [...prev, ...response.data.posts])
+      setHasMore(response.data.currentPage < response.data.totalPages)
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to load posts')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreatePost = async (e) => {
+    e.preventDefault()
+    if (!newPostContent.trim()) return
+
+    try {
+      const response = await axios.post('/posts', {
+        content: newPostContent,
+        type: 'text',
+        visibility: 'public',
+      })
+
+      setPosts([response.data.post, ...posts])
+      setNewPostContent('')
+      toast.success('Post created!')
+    } catch (error) {
+      toast.error('Failed to create post')
+    }
+  }
+
+  const handleLikePost = async (postId) => {
+    try {
+      const response = await axios.post(`/posts/${postId}/like`)
+      
+      setPosts(prev => prev.map(p => {
+        if (p._id === postId) {
+          const newLikes = response.data.liked 
+            ? [...(p.likes || []), user._id]
+            : (p.likes || []).filter(id => id !== user._id)
+          return { ...p, likes: newLikes, likeCount: response.data.likes }
+        }
+        return p
+      }))
+    } catch (error) {
+      toast.error('Failed to like post')
+    }
+  }
+
+  const handleSharePost = async (postId) => {
+    try {
+      await axios.post(`/posts/${postId}/share`)
+      toast.success('Post shared!')
+    } catch (error) {
+      toast.error('Failed to share post')
+    }
+  }
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
+    )
+  }
+
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        <h1 className="text-3xl font-bold mb-6">Social Feed</h1>
+
+        {/* Create Post */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <Avatar>
+                <AvatarImage src={user?.avatar} />
+                <AvatarFallback>{getInitials(user?.name || 'U')}</AvatarFallback>
+              </Avatar>
+              <form onSubmit={handleCreatePost} className="flex-1">
+                <Input
+                  placeholder="What's on your mind?"
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                  className="mb-3"
+                  multiline
+                />
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <Button type="button" variant="ghost" size="sm">
+                      <ImageIcon className="w-4 h-4 mr-1" />
+                      Photo
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm">
+                      <Video className="w-4 h-4 mr-1" />
+                      Video
+                    </Button>
+                  </div>
+                  <Button type="submit" disabled={!newPostContent.trim()}>
+                    Post
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Posts */}
+        <div className="space-y-4">
+          {posts.map((post) => (
+            <PostCard
+              key={post._id}
+              post={post}
+              currentUser={user}
+              onLike={handleLikePost}
+              onShare={handleSharePost}
+            />
+          ))}
+
+          {posts.length === 0 && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <MessageCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-xl font-semibold mb-2">No Posts Yet</h3>
+                <p className="text-muted-foreground">Be the first to share something!</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {hasMore && (
+            <Button 
+              onClick={() => {
+                setPage(p => p + 1)
+                fetchPosts()
+              }}
+              className="w-full"
+              variant="outline"
+            >
+              Load More
+            </Button>
+          )}
+        </div>
+      </div>
+    </Layout>
+  )
+}
+
+const PostCard = ({ post, currentUser, onLike, onShare }) => {
+  const [showComments, setShowComments] = useState(false)
+  const [comments, setComments] = useState(post.comments || [])
+  const [newComment, setNewComment] = useState('')
+  const [isLiked, setIsLiked] = useState(
+    post.likes?.includes(currentUser?._id) || false
+  )
+
+  const handleAddComment = async (e) => {
+    e.preventDefault()
+    if (!newComment.trim()) return
+
+    try {
+      const response = await axios.post(`/posts/${post._id}/comments`, {
+        text: newComment,
+      })
+
+      setComments([response.data.comment, ...comments])
+      setNewComment('')
+      toast.success('Comment added!')
+    } catch (error) {
+      toast.error('Failed to add comment')
+    }
+  }
+
+  const handleLike = () => {
+    setIsLiked(!isLiked)
+    onLike(post._id)
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-4">
+        {/* Post Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Avatar>
+              <AvatarImage src={post.user?.avatar} />
+              <AvatarFallback>{getInitials(post.user?.name || 'U')}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold">{post.user?.name}</p>
+              <p className="text-sm text-muted-foreground">
+                {formatDate(post.createdAt)}
+              </p>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon">
+            <MoreVertical className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Post Content */}
+        <div className="mb-3">
+          <p className="whitespace-pre-wrap">{post.content}</p>
+          {post.sharedMovie && (
+            <Card className="mt-3 border">
+              <CardContent className="p-3 flex gap-3">
+                <img
+                  src={post.sharedMovie.poster}
+                  alt={post.sharedMovie.title}
+                  className="w-16 h-24 object-cover rounded"
+                />
+                <div>
+                  <h4 className="font-semibold">{post.sharedMovie.title}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Rating: {post.sharedMovie.rating}/10
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Post Stats */}
+        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3 pb-3 border-b">
+          <span>{post.likeCount || post.likes?.length || 0} likes</span>
+          <span>{post.commentCount || comments.length} comments</span>
+          <span>{post.shareCount || post.shares?.length || 0} shares</span>
+        </div>
+
+        {/* Post Actions */}
+        <div className="flex items-center gap-2 mb-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLike}
+            className={isLiked ? 'text-red-500' : ''}
+          >
+            <Heart className={`w-5 h-5 mr-1 ${isLiked ? 'fill-red-500' : ''}`} />
+            Like
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowComments(!showComments)}
+          >
+            <MessageCircle className="w-5 h-5 mr-1" />
+            Comment
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onShare(post._id)}>
+            <Share2 className="w-5 h-5 mr-1" />
+            Share
+          </Button>
+        </div>
+
+        {/* Comments Section */}
+        {showComments && (
+          <div className="border-t pt-3">
+            {/* Add Comment */}
+            <form onSubmit={handleAddComment} className="flex items-center gap-2 mb-3">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={currentUser?.avatar} />
+                <AvatarFallback>{getInitials(currentUser?.name || 'U')}</AvatarFallback>
+              </Avatar>
+              <Input
+                placeholder="Write a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="flex-1"
+              />
+              <Button type="submit" size="icon" disabled={!newComment.trim()}>
+                <Send className="w-4 h-4" />
+              </Button>
+            </form>
+
+            {/* Comments List */}
+            <div className="space-y-3">
+              {comments.slice(0, 3).map((comment) => (
+                <div key={comment._id} className="flex gap-2">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={comment.user?.avatar} />
+                    <AvatarFallback>{getInitials(comment.user?.name || 'U')}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 bg-secondary rounded-lg p-2">
+                    <p className="font-semibold text-sm">{comment.user?.name}</p>
+                    <p className="text-sm">{comment.text}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatDate(comment.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {comments.length > 3 && (
+                <Button variant="link" size="sm">
+                  View all {comments.length} comments
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+export default EnhancedSocialFeed

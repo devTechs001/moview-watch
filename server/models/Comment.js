@@ -5,7 +5,10 @@ const commentSchema = new mongoose.Schema(
     movie: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Movie',
-      required: true,
+    },
+    post: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Post',
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,6 +19,11 @@ const commentSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Comment text is required'],
       trim: true,
+      maxlength: 1000,
+    },
+    parentComment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Comment',
     },
     likes: {
       type: Number,
@@ -27,6 +35,10 @@ const commentSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
+    replies: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Comment',
+    }],
   },
   {
     timestamps: true,
