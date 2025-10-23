@@ -1,10 +1,15 @@
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
-const Card = React.forwardRef(({ className, ...props }, ref) => (
+const Card = React.forwardRef(({ className, elevated, interactive, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)}
+    className={cn(
+      "rounded-xl border bg-card text-card-foreground shadow-md transition-all duration-200",
+      elevated && "shadow-lg hover:shadow-xl",
+      interactive && "cursor-pointer hover:scale-[1.02] hover:shadow-lg",
+      className
+    )}
     {...props}
   />
 ))

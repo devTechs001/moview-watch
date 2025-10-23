@@ -80,6 +80,18 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    watchLater: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Movie',
+      },
+    ],
+    friends: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     followers: [
       {
         type: mongoose.Schema.Types.ObjectId,

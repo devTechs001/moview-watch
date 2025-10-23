@@ -30,28 +30,28 @@ const SocialActivityCard = ({ activity }) => {
   }
 
   return (
-    <Card>
+    <Card elevated interactive className="hover-lift transition-all duration-300">
       <CardContent className="p-6">
         <div className="flex gap-4">
-          <Link to={`/profile/${activity.user?._id}`}>
-            <Avatar className="w-12 h-12">
+          <Link to={`/profile/${activity.user?._id}`} className="group">
+            <Avatar className="w-12 h-12 ring-2 ring-transparent group-hover:ring-primary transition-all">
               <AvatarImage src={activity.user?.avatar} />
-              <AvatarFallback>{getInitials(activity.user?.name || 'User')}</AvatarFallback>
+              <AvatarFallback className="bg-gradient-primary text-white">{getInitials(activity.user?.name || 'User')}</AvatarFallback>
             </Avatar>
           </Link>
           
           <div className="flex-1">
-            <div className="flex items-start gap-2 mb-2">
+            <div className="flex items-start gap-2 mb-3">
               <div className="flex items-center gap-2 flex-wrap">
                 {getActivityIcon(activity.type)}
-                <Link to={`/profile/${activity.user?._id}`} className="font-semibold hover:underline">
+                <Link to={`/profile/${activity.user?._id}`} className="font-semibold hover:text-primary transition-colors">
                   {activity.user?.name}
                 </Link>
                 <span className="text-muted-foreground">
                   {getActivityText(activity)}
                 </span>
                 {activity.movie && (
-                  <Link to={`/movie/${activity.movie._id}`} className="font-semibold text-primary hover:underline">
+                  <Link to={`/movie/${activity.movie._id}`} className="font-semibold text-primary hover:text-primary/80 transition-colors">
                     "{activity.movie.title}"
                   </Link>
                 )}
@@ -59,23 +59,27 @@ const SocialActivityCard = ({ activity }) => {
             </div>
 
             {activity.rating && (
-              <div className="flex items-center gap-1 mb-2">
-                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span className="font-semibold">{activity.rating}/10</span>
+              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 mb-3">
+                <Star className="w-4 h-4 text-yellow-600 dark:text-yellow-400 fill-yellow-600 dark:fill-yellow-400" />
+                <span className="font-semibold text-yellow-800 dark:text-yellow-300">{activity.rating}/10</span>
               </div>
             )}
 
             {activity.movie?.poster && (
-              <Link to={`/movie/${activity.movie._id}`}>
-                <img
-                  src={activity.movie.poster}
-                  alt={activity.movie.title}
-                  className="w-32 h-48 object-cover rounded-lg mt-2"
-                />
+              <Link to={`/movie/${activity.movie._id}`} className="block group">
+                <div className="relative w-32 h-48 rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-all duration-300">
+                  <img
+                    src={activity.movie.poster}
+                    alt={activity.movie.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
               </Link>
             )}
 
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-3 flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-muted-foreground"></span>
               {formatDate(activity.createdAt)}
             </p>
           </div>

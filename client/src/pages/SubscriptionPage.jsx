@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Check, Crown, Star, Zap, CreditCard, Calendar } from 'lucide-react'
+import { Check, Crown, Star, Zap, CreditCard, Calendar, Shield } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -13,6 +14,7 @@ const SubscriptionPage = () => {
   const [loading, setLoading] = useState(true)
   const [selectedPlan, setSelectedPlan] = useState(null)
   const { user } = useAuthStore()
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchPlans()
@@ -21,11 +23,18 @@ const SubscriptionPage = () => {
 
   const fetchPlans = async () => {
     try {
-      const response = await axios.get('/subscriptions/plans')
+      // Try new payment endpoint first
+      const response = await axios.get('/payment/plans')
       setPlans(response.data.plans)
     } catch (error) {
-      console.error(error)
-      toast.error('Failed to load plans')
+      // Fallback to old endpoint
+      try {
+        const response = await axios.get('/subscriptions/plans')
+        setPlans(response.data.plans)
+      } catch (err) {
+        console.error(err)
+        toast.error('Failed to load plans')
+      }
     }
   }
 
@@ -40,18 +49,9 @@ const SubscriptionPage = () => {
     }
   }
 
-  const handleSubscribe = async (planType) => {
-    try {
-      const response = await axios.post('/subscriptions/subscribe', {
-        planType,
-        paymentMethod: planType === 'free' ? 'none' : 'stripe',
-      })
-      
-      toast.success(response.data.message)
-      await fetchCurrentSubscription()
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to subscribe')
-    }
+  const handleSubscribe = (planId) => {
+    // Navigate to checkout page with selected plan
+    navigate(`/checkout?plan=${planId}`)
   }
 
   const handleCancelSubscription = async () => {

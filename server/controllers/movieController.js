@@ -46,10 +46,20 @@ export const getMovies = async (req, res) => {
 // @access  Public
 export const getMovie = async (req, res) => {
   try {
-    const movie = await Movie.findById(req.params.id).populate('addedBy', 'name')
+    const movie = await Movie.findById(req.params.id)
 
     if (!movie) {
       return res.status(404).json({ message: 'Movie not found' })
+    }
+
+    // Check if user still exists before populating
+    if (movie.addedBy) {
+      try {
+        await movie.populate('addedBy', 'name avatar')
+      } catch (populateError) {
+        console.error('Error populating movie author:', populateError)
+        // Continue without populated data
+      }
     }
 
     // Increment views
@@ -58,7 +68,8 @@ export const getMovie = async (req, res) => {
 
     res.json({ movie })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    console.error('Get movie error:', error)
+    res.status(500).json({ message: 'Server error while fetching movie' })
   }
 }
 

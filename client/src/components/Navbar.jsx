@@ -18,13 +18,16 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/home" className="flex items-center gap-2 text-2xl font-bold">
-            <Film className="w-8 h-8 text-primary" />
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <Link to="/home" className="flex items-center gap-2 text-2xl font-bold group">
+            <div className="relative">
+              <Film className="w-8 h-8 text-primary transition-transform group-hover:scale-110 group-hover:rotate-12" />
+              <div className="absolute inset-0 bg-primary/20 blur-xl group-hover:bg-primary/30 transition-all"></div>
+            </div>
+            <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
               CinemaFlix
             </span>
           </Link>
@@ -36,7 +39,7 @@ const Navbar = () => {
               <input
                 type="text"
                 placeholder="Search movies..."
-                className="w-full h-10 pl-10 pr-4 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-10 pl-10 pr-4 rounded-lg border-2 border-input bg-background/50 backdrop-blur-sm text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary hover:border-primary/50 hover:bg-background"
                 onFocus={() => navigate('/search')}
               />
             </div>

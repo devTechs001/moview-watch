@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, Users, MessageCircle, User, Film, Heart, Settings, Shield } from 'lucide-react'
+import { Home, Search, Users, MessageCircle, User, Film, Heart, Settings, Shield, Palette, UserPlus, TrendingUp } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 const MobileNav = () => {
@@ -18,8 +18,10 @@ const MobileNav = () => {
   ]
 
   const secondaryNavItems = [
+    { name: 'Friends', icon: UserPlus, path: '/friends' },
+    { name: 'Stories', icon: TrendingUp, path: '/stories' },
     { name: 'Chat', icon: MessageCircle, path: '/chat' },
-    { name: 'Profile', icon: User, path: '/profile' },
+    { name: 'Theme', icon: Palette, path: '/theme' },
   ]
 
   const adminNavItems = user?.role === 'admin' ? [
@@ -82,12 +84,34 @@ const MobileNav = () => {
         </div>
       </nav>
 
-      {/* Additional Quick Actions (Optional) */}
+      {/* Additional Quick Actions */}
       <div className="border-t border-border/50 bg-card/80 backdrop-blur-sm">
-        <div className="flex items-center justify-center py-2">
+        <div className="flex items-center justify-around py-2 px-4">
+          <Link
+            to="/profile"
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-colors ${
+              isActive('/profile')
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Profile</span>
+          </Link>
+          <Link
+            to="/wishlist"
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-colors ${
+              isActive('/wishlist')
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+            }`}
+          >
+            <Heart className="w-4 h-4" />
+            <span>Wishlist</span>
+          </Link>
           <Link
             to="/settings"
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs transition-colors ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-colors ${
               isActive('/settings')
                 ? 'text-primary bg-primary/10'
                 : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'

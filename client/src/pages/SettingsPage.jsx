@@ -163,7 +163,10 @@ const SettingsPage = () => {
               <label className="block text-sm font-medium mb-3">Theme</label>
               <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={() => setTheme('light')}
+                  onClick={() => {
+                    console.log('☀️ Light theme button clicked')
+                    setTheme('light')
+                  }}
                   className={`p-4 rounded-lg border-2 transition-colors ${
                     theme === 'light'
                       ? 'border-primary bg-primary/10'
@@ -176,7 +179,10 @@ const SettingsPage = () => {
                   <p className="font-medium text-center">Light</p>
                 </button>
                 <button
-                  onClick={() => setTheme('dark')}
+                  onClick={() => {
+                    console.log('🌙 Dark theme button clicked')
+                    setTheme('dark')
+                  }}
                   className={`p-4 rounded-lg border-2 transition-colors ${
                     theme === 'dark'
                       ? 'border-primary bg-primary/10'

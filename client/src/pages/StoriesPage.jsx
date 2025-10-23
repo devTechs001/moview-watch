@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react'
-import { Plus, X, Heart, Eye } from 'lucide-react'
+import { Plus, X, Heart, Eye, Send, Smile, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import Layout from '../components/Layout'
 import CreateStoryModal from '../components/CreateStoryModal'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import axios from '../lib/axios'
-import { getInitials } from '../lib/utils'
+import { getInitials, formatDate } from '../lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import toast from 'react-hot-toast'
 
 const StoriesPage = () => {
   const [stories, setStories] = useState([])
   const [selectedStory, setSelectedStory] = useState(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [replyText, setReplyText] = useState('')
+  const [isLiked, setIsLiked] = useState(false)
 
   useEffect(() => {
     fetchStories()

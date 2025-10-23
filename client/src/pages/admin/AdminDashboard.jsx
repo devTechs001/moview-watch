@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Film, Users, TrendingUp, DollarSign, Eye, Heart, MessageCircle, Star } from 'lucide-react'
+import { Film, Users, TrendingUp, DollarSign, Eye, Heart, MessageCircle, Star, BarChart3 } from 'lucide-react'
 import AdminLayout from '../../components/AdminLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -183,10 +183,10 @@ const AdminDashboard = () => {
                 <TrendingUp className="w-5 h-5 mr-2" />
                 View Analytics
               </Button>
-              <Link to="/admin/settings">
+              <Link to="/theme">
                 <Button className="w-full" variant="outline">
-                  <MessageCircle className="w-5 h-5 mr-2" />
-                  Settings
+                  <Star className="w-5 h-5 mr-2" />
+                  Theme Settings
                 </Button>
               </Link>
             </div>

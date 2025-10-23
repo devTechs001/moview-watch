@@ -5,6 +5,7 @@ import { Card, CardContent } from '../components/ui/Card'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import MediaUpload from '../components/MediaUpload'
 import axios from '../lib/axios'
 import { useAuthStore } from '../store/authStore'
 import { getInitials, formatDate } from '../lib/utils'
@@ -19,6 +20,9 @@ const EnhancedSocialFeed = () => {
   const [socket, setSocket] = useState(null)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [showMediaUpload, setShowMediaUpload] = useState(false)
+  const [selectedMedia, setSelectedMedia] = useState(null)
+  const [mediaPreview, setMediaPreview] = useState(null)
 
   useEffect(() => {
     fetchPosts()
@@ -68,21 +72,49 @@ const EnhancedSocialFeed = () => {
 
   const handleCreatePost = async (e) => {
     e.preventDefault()
-    if (!newPostContent.trim()) return
+    if (!newPostContent.trim() && !selectedMedia) return
 
     try {
-      const response = await axios.post('/posts', {
-        content: newPostContent,
-        type: 'text',
-        visibility: 'public',
+      const formData = new FormData()
+      formData.append('content', newPostContent)
+      formData.append('visibility', 'public')
+      
+      if (selectedMedia) {
+        formData.append('media', selectedMedia)
+        formData.append('type', selectedMedia.type.startsWith('image/') ? 'image' : 'video')
+      } else {
+        formData.append('type', 'text')
+      }
+
+      const response = await axios.post('/posts', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       })
 
       setPosts([response.data.post, ...posts])
       setNewPostContent('')
+      setSelectedMedia(null)
+      setMediaPreview(null)
       toast.success('Post created!')
     } catch (error) {
       toast.error('Failed to create post')
     }
+  }
+
+  const handleMediaSelect = (file, type) => {
+    setSelectedMedia(file)
+    setMediaPreview(URL.createObjectURL(file))
+    setShowMediaUpload(false)
+    toast.success(`${type === 'image' ? 'Photo' : 'Video'} added!`)
+  }
+
+  const removeMedia = () => {
+    if (mediaPreview) {
+      URL.revokeObjectURL(mediaPreview)
+    }
+    setSelectedMedia(null)
+    setMediaPreview(null)
   }
 
   const handleLikePost = async (postId) => {
@@ -125,36 +157,79 @@ const EnhancedSocialFeed = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6 max-w-2xl">
-        <h1 className="text-3xl font-bold mb-6">Social Feed</h1>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2 text-gradient">Social Feed</h1>
+          <p className="text-muted-foreground">Connect with movie lovers around the world</p>
+        </div>
 
         {/* Create Post */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
+        <Card elevated className="mb-6 sticky top-20 z-10 bg-card/95 backdrop-blur-sm">
+          <CardContent className="p-6">
             <div className="flex items-start gap-3">
               <Avatar>
                 <AvatarImage src={user?.avatar} />
                 <AvatarFallback>{getInitials(user?.name || 'U')}</AvatarFallback>
               </Avatar>
               <form onSubmit={handleCreatePost} className="flex-1">
-                <Input
+                <textarea
                   placeholder="What's on your mind?"
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
-                  className="mb-3"
-                  multiline
+                  className="mb-3 w-full min-h-[100px] p-4 rounded-lg border-2 border-input bg-background text-sm resize-none transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary hover:border-primary/50"
                 />
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <Button type="button" variant="ghost" size="sm">
-                      <ImageIcon className="w-4 h-4 mr-1" />
-                      Photo
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm">
-                      <Video className="w-4 h-4 mr-1" />
-                      Video
+                
+                {/* Media Preview */}
+                {mediaPreview && (
+                  <div className="mb-3 relative">
+                    {selectedMedia?.type.startsWith('image/') ? (
+                      <img 
+                        src={mediaPreview} 
+                        alt="Preview" 
+                        className="w-full max-h-64 object-cover rounded-lg"
+                      />
+                    ) : (
+                      <video 
+                        src={mediaPreview} 
+                        controls 
+                        className="w-full max-h-64 rounded-lg"
+                      />
+                    )}
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={removeMedia}
+                    >
+                      <X className="w-4 h-4" />
                     </Button>
                   </div>
-                  <Button type="submit" disabled={!newPostContent.trim()}>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm"
+                      className="hover:bg-primary/10 hover:text-primary"
+                      onClick={() => setShowMediaUpload(true)}
+                    >
+                      <ImageIcon className="w-4 h-4 mr-1" />
+                      Photo/Video
+                    </Button>
+                    {selectedMedia && (
+                      <span className="text-sm text-primary font-medium">
+                        ✓ Media attached
+                      </span>
+                    )}
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={!newPostContent.trim()}
+                    className="min-w-[100px]"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
                     Post
                   </Button>
                 </div>
@@ -199,6 +274,14 @@ const EnhancedSocialFeed = () => {
           )}
         </div>
       </div>
+      
+      {/* Media Upload Modal */}
+      {showMediaUpload && (
+        <MediaUpload 
+          onMediaSelect={handleMediaSelect}
+          onClose={() => setShowMediaUpload(false)}
+        />
+      )}
     </Layout>
   )
 }
@@ -234,10 +317,10 @@ const PostCard = ({ post, currentUser, onLike, onShare }) => {
   }
 
   return (
-    <Card>
-      <CardContent className="p-4">
+    <Card elevated interactive className="hover-lift">
+      <CardContent className="p-6">
         {/* Post Header */}
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarImage src={post.user?.avatar} />
@@ -250,17 +333,22 @@ const PostCard = ({ post, currentUser, onLike, onShare }) => {
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="icon">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="hover:bg-secondary"
+            onClick={() => toast('Post options coming soon!', { icon: '⚙️' })}
+          >
             <MoreVertical className="w-5 h-5" />
           </Button>
         </div>
 
         {/* Post Content */}
-        <div className="mb-3">
-          <p className="whitespace-pre-wrap">{post.content}</p>
+        <div className="mb-4">
+          <p className="whitespace-pre-wrap text-base leading-relaxed">{post.content}</p>
           {post.sharedMovie && (
-            <Card className="mt-3 border">
-              <CardContent className="p-3 flex gap-3">
+            <Card className="mt-4 border-2 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
+              <CardContent className="p-4 flex gap-4">
                 <img
                   src={post.sharedMovie.poster}
                   alt={post.sharedMovie.title}
@@ -278,42 +366,51 @@ const PostCard = ({ post, currentUser, onLike, onShare }) => {
         </div>
 
         {/* Post Stats */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3 pb-3 border-b">
+        <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4 pb-4 border-b border-border/50">
           <span>{post.likeCount || post.likes?.length || 0} likes</span>
           <span>{post.commentCount || comments.length} comments</span>
           <span>{post.shareCount || post.shares?.length || 0} shares</span>
         </div>
 
         {/* Post Actions */}
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-1 mb-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLike}
-            className={isLiked ? 'text-red-500' : ''}
+            className={`flex-1 transition-all duration-200 ${isLiked ? 'text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20' : 'hover:bg-secondary'}`}
           >
-            <Heart className={`w-5 h-5 mr-1 ${isLiked ? 'fill-red-500' : ''}`} />
-            Like
+            <Heart className={`w-5 h-5 mr-2 transition-transform ${isLiked ? 'fill-red-500 scale-110' : ''}`} />
+            {isLiked ? 'Liked' : 'Like'}
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowComments(!showComments)}
+            className="flex-1 hover:bg-secondary transition-colors"
           >
-            <MessageCircle className="w-5 h-5 mr-1" />
+            <MessageCircle className="w-5 h-5 mr-2" />
             Comment
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => onShare(post._id)}>
-            <Share2 className="w-5 h-5 mr-1" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              onShare(post._id)
+              toast.success('Post shared!')
+            }}
+            className="flex-1 hover:bg-secondary transition-colors"
+          >
+            <Share2 className="w-5 h-5 mr-2" />
             Share
           </Button>
         </div>
 
         {/* Comments Section */}
         {showComments && (
-          <div className="border-t pt-3">
+          <div className="border-t border-border/50 pt-4 animate-in slide-in-from-top-2 duration-200">
             {/* Add Comment */}
-            <form onSubmit={handleAddComment} className="flex items-center gap-2 mb-3">
+            <form onSubmit={handleAddComment} className="flex items-center gap-3 mb-4">
               <Avatar className="w-8 h-8">
                 <AvatarImage src={currentUser?.avatar} />
                 <AvatarFallback>{getInitials(currentUser?.name || 'U')}</AvatarFallback>
@@ -324,20 +421,25 @@ const PostCard = ({ post, currentUser, onLike, onShare }) => {
                 onChange={(e) => setNewComment(e.target.value)}
                 className="flex-1"
               />
-              <Button type="submit" size="icon" disabled={!newComment.trim()}>
+              <Button 
+                type="submit" 
+                size="icon" 
+                disabled={!newComment.trim()}
+                className="shrink-0"
+              >
                 <Send className="w-4 h-4" />
               </Button>
             </form>
 
             {/* Comments List */}
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
               {comments.slice(0, 3).map((comment) => (
                 <div key={comment._id} className="flex gap-2">
                   <Avatar className="w-8 h-8">
                     <AvatarImage src={comment.user?.avatar} />
                     <AvatarFallback>{getInitials(comment.user?.name || 'U')}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 bg-secondary rounded-lg p-2">
+                  <div className="flex-1 bg-secondary/50 hover:bg-secondary/80 rounded-xl p-3 transition-colors">
                     <p className="font-semibold text-sm">{comment.user?.name}</p>
                     <p className="text-sm">{comment.text}</p>
                     <p className="text-xs text-muted-foreground mt-1">

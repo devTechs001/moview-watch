@@ -30,23 +30,35 @@ const MovieDetails = () => {
       setMovie(response.data.movie)
     } catch (error) {
       console.error('Error fetching movie:', error)
-      // Demo data
-      setMovie({
+
+      // Provide fallback movie data for development
+      const fallbackMovie = {
         _id: id,
-        title: 'Amazing Movie Title',
-        poster: 'https://picsum.photos/seed/detail/400/600',
-        backdrop: 'https://picsum.photos/seed/backdrop/1920/800',
-        year: 2024,
-        genre: ['Action', 'Thriller', 'Sci-Fi'],
+        title: 'Sample Movie',
+        description: 'This is a sample movie for development purposes. The movie you\'re looking for doesn\'t exist in the database yet.',
+        poster: '/placeholder-movie.jpg',
+        backdrop: '/placeholder-backdrop.jpg',
+        year: new Date().getFullYear(),
+        duration: 120,
+        genre: ['Action', 'Adventure'],
+        director: 'Sample Director',
+        cast: ['Actor 1', 'Actor 2', 'Actor 3'],
         rating: 8.5,
-        duration: 145,
-        description: 'An epic adventure that takes you on a thrilling journey through time and space. When an unlikely hero discovers a hidden power within themselves, they must race against time to save the world from impending doom. Filled with stunning visuals, heart-pounding action sequences, and emotional depth, this film redefines what cinema can be.',
-        director: 'Christopher Nolan',
-        cast: ['Tom Hanks', 'Emma Stone', 'Michael B. Jordan'],
-        likes: 15420,
-        views: 234567,
-        trailer: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-      })
+        ratingCount: 1250,
+        likes: 450,
+        views: 12500,
+        status: 'active',
+        featured: false,
+        addedBy: {
+          _id: '1',
+          name: 'Admin User',
+          avatar: ''
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      setMovie(fallbackMovie)
     } finally {
       setLoading(false)
     }

@@ -7,6 +7,7 @@ import { useAuthStore } from './store/authStore'
 import SplashScreen from './components/SplashScreen'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
+import ThemeProvider from './components/ThemeProvider'
 
 // Pages
 import LandingPage from './pages/LandingPage'
@@ -18,6 +19,7 @@ import WatchMovie from './pages/WatchMovie'
 import SearchPage from './pages/SearchPage'
 import WishlistPage from './pages/WishlistPage'
 import ProfilePage from './pages/ProfilePage'
+import EnhancedProfilePage from './pages/EnhancedProfilePage'
 import SettingsPage from './pages/SettingsPage'
 import ChatPage from './pages/ChatPage'
 import SocialFeed from './pages/SocialFeed'
@@ -33,6 +35,8 @@ import ChatroomsPage from './pages/ChatroomsPage'
 import ChatroomView from './pages/ChatroomView'
 import PaymentPage from './pages/PaymentPage'
 import InvitePage from './pages/InvitePage'
+import FriendsPage from './pages/FriendsPage'
+import SubscriptionCheckout from './pages/SubscriptionCheckout'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -41,7 +45,12 @@ import AdminUsers from './pages/admin/AdminUsers'
 import AdminSettings from './pages/admin/AdminSettings'
 import AISecurityDashboard from './pages/admin/AISecurityDashboard'
 import TMDBImporter from './pages/admin/TMDBImporter'
+import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminSubscriptions from './pages/admin/AdminSubscriptions'
+import EnhancedThemeSelector from './pages/admin/EnhancedThemeSelector'
+import AdminReports from './pages/admin/AdminReports'
+import AdminActivityLog from './pages/admin/AdminActivityLog'
+import ThemeDebugPage from './pages/ThemeDebugPage'
 
 function App() {
   const [showSplash, setShowSplash] = useState(true)
@@ -64,15 +73,15 @@ function App() {
   }
 
   return (
-    <>
+    <ThemeProvider>
       <Toaster 
         position="top-right"
         toastOptions={{
           duration: 3000,
           style: {
-            background: 'hsl(var(--card))',
-            color: 'hsl(var(--card-foreground))',
-            border: '1px solid hsl(var(--border))',
+            background: 'var(--card)',
+            color: 'var(--card-foreground)',
+            border: '1px solid var(--border)',
           },
         }}
       />
@@ -111,7 +120,12 @@ function App() {
         } />
         <Route path="/profile" element={
           <ProtectedRoute>
-            <ProfilePage />
+            <EnhancedProfilePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile/:userId" element={
+          <ProtectedRoute>
+            <EnhancedProfilePage />
           </ProtectedRoute>
         } />
         <Route path="/settings" element={
@@ -164,6 +178,11 @@ function App() {
             <SubscriptionPage />
           </ProtectedRoute>
         } />
+        <Route path="/checkout" element={
+          <ProtectedRoute>
+            <SubscriptionCheckout />
+          </ProtectedRoute>
+        } />
         <Route path="/billing" element={
           <ProtectedRoute>
             <BillingPage />
@@ -185,6 +204,11 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="/invite/:code" element={<InvitePage />} />
+        <Route path="/friends" element={
+          <ProtectedRoute>
+            <FriendsPage />
+          </ProtectedRoute>
+        } />
 
         {/* Admin Routes */}
         <Route path="/admin" element={
@@ -222,11 +246,39 @@ function App() {
             <AdminSubscriptions />
           </AdminRoute>
         } />
+        <Route path="/admin/analytics" element={
+          <AdminRoute>
+            <AdminAnalytics />
+          </AdminRoute>
+        } />
+        <Route path="/admin/reports" element={
+          <AdminRoute>
+            <AdminReports />
+          </AdminRoute>
+        } />
+        <Route path="/admin/activity" element={
+          <AdminRoute>
+            <AdminActivityLog />
+          </AdminRoute>
+        } />
 
-        {/* 404 */}
+        {/* User Theme Settings */}
+        <Route path="/theme" element={
+          <ProtectedRoute>
+            <EnhancedThemeSelector />
+          </ProtectedRoute>
+        } />
+        
+        {/* Theme Debug Page */}
+        <Route path="/theme-debug" element={
+          <ProtectedRoute>
+            <ThemeDebugPage />
+          </ProtectedRoute>
+        } />
+        
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </>
+    </ThemeProvider>
   )
 }
 

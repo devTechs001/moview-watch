@@ -25,7 +25,9 @@ import paymentRoutes from './routes/paymentRoutes.js'
 import postRoutes from './routes/postRoutes.js'
 import aiMonitoringRoutes from './routes/aiMonitoringRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
+import chatRoutes from './routes/chatRoutes.js'
 import inviteLinkRoutes from './routes/inviteLinkRoutes.js'
+import friendRoutes from './routes/friendRoutes.js'
 
 // Load env vars
 dotenv.config()
@@ -34,11 +36,24 @@ dotenv.config()
 console.log('🔧 Environment loaded from .env file')
 console.log('📍 NODE_ENV:', process.env.NODE_ENV)
 console.log('🔌 PORT:', process.env.PORT)
-console.log('🗄️  MongoDB URI:', process.env.MONGODB_URI ? '✅ Loaded' : '❌ Missing')
+console.log('🗄️  MongoDB URI:', process.env.MONGODB_URI ||process.env.MONGO_URI ? '✅ Loaded' : '❌ Missing')
 console.log('🔑 JWT Secret:', process.env.JWT_SECRET ? '✅ Loaded' : '❌ Missing')
+
+import seedMovies from './utils/seedMovies.js'
 
 // Connect to database
 connectDB()
+
+// Seed movies in development
+if (process.env.NODE_ENV === 'development') {
+  setTimeout(async () => {
+    try {
+      await seedMovies()
+    } catch (error) {
+      console.error('Error seeding movies:', error)
+    }
+  }, 2000) // Wait 2 seconds for DB connection
+}
 
 // Initialize express app
 const app = express()
@@ -51,22 +66,42 @@ const io = new Server(httpServer, {
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:5175',
+      'http://localhost:5176',
+      'http://localhost:3000',
       process.env.CLIENT_URL
     ].filter(Boolean),
     credentials: true,
+    methods: ['GET', 'POST'],
   },
 })
 
 // Middleware
-app.use(helmet())
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+}))
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5175',
-    process.env.CLIENT_URL
-  ].filter(Boolean),
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://localhost:5176',
+      'http://localhost:3000',
+      process.env.CLIENT_URL
+    ].filter(Boolean)
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(null, true) // Allow all in development
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400,
 }))
 app.use(compression())
 app.use(express.json())
@@ -100,11 +135,13 @@ app.use('/api/admin/security', aiSecurityRoutes)
 app.use('/api/admin/tmdb', tmdbRoutes)
 app.use('/api/subscriptions', subscriptionRoutes)
 app.use('/api/chatrooms', chatroomRoutes)
+app.use('/api/chat', chatRoutes)
 app.use('/api/payments', paymentRoutes)
 app.use('/api/posts', postRoutes)
 app.use('/api/ai-monitoring', aiMonitoringRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/invite', inviteLinkRoutes)
+app.use('/api/friends', friendRoutes)
 
 // Error handler
 app.use(errorHandler)

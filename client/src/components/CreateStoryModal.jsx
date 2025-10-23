@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { X, Upload, Film, Image as ImageIcon } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { X, Upload, Film, Image as ImageIcon, Camera, Type, Smile, Palette, Sparkles, Music } from 'lucide-react'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
 import axios from '../lib/axios'
 import toast from 'react-hot-toast'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const CreateStoryModal = ({ isOpen, onClose, onStoryCreated }) => {
   const [storyType, setStoryType] = useState('text')
@@ -11,6 +12,14 @@ const CreateStoryModal = ({ isOpen, onClose, onStoryCreated }) => {
   const [mediaUrl, setMediaUrl] = useState('')
   const [movieId, setMovieId] = useState('')
   const [loading, setLoading] = useState(false)
+  const [uploadedFile, setUploadedFile] = useState(null)
+  const [previewUrl, setPreviewUrl] = useState('')
+  const [textColor, setTextColor] = useState('#ffffff')
+  const [backgroundColor, setBackgroundColor] = useState('#000000')
+  const [fontSize, setFontSize] = useState('medium')
+  const [filter, setFilter] = useState('none')
+  const fileInputRef = useRef(null)
+  const cameraInputRef = useRef(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()

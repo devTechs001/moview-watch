@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { TrendingUp, Film, Star } from 'lucide-react'
+import { TrendingUp, Film, Star, Play, Info } from 'lucide-react'
 import Layout from '../components/Layout'
 import MovieCard from '../components/MovieCard'
+import { Button } from '../components/ui/Button'
 import axios from '../lib/axios'
+import toast from 'react-hot-toast'
 
 const HomePage = () => {
   const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(true)
   const [categories] = useState(['All', 'Action', 'Comedy', 'Drama', 'Thriller', 'Sci-Fi', 'Horror'])
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [featuredMovie, setFeaturedMovie] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchMovies()
+    fetchFeaturedMovie()
   }, [selectedCategory])
 
   const fetchMovies = async () => {
@@ -27,6 +33,41 @@ const HomePage = () => {
       setMovies(generateDemoMovies())
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchFeaturedMovie = async () => {
+    try {
+      const response = await axios.get('/movies/featured')
+      setFeaturedMovie(response.data.movie)
+    } catch (error) {
+      // Use demo featured movie
+      setFeaturedMovie({
+        _id: 'featured',
+        title: 'The Last Guardian',
+        poster: 'https://picsum.photos/seed/featured/1920/500',
+        year: 2024,
+        genre: ['Action', 'Thriller'],
+        rating: 8.5,
+        duration: '2h 15m',
+        description: 'An epic journey through time and space that will keep you on the edge of your seat. Experience the thrill like never before.',
+      })
+    }
+  }
+
+  const handleWatchNow = (movieId) => {
+    if (movieId) {
+      navigate(`/watch/${movieId}`)
+    } else {
+      toast('Select a movie to watch', { icon: 'ℹ️' })
+    }
+  }
+
+  const handleMoreInfo = (movieId) => {
+    if (movieId) {
+      navigate(`/movie/${movieId}`)
+    } else {
+      toast('Select a movie for more information', { icon: 'ℹ️' })
     }
   }
 
@@ -64,52 +105,68 @@ const HomePage = () => {
                 <span className="text-yellow-400 font-semibold">Trending Now</span>
               </div>
               <h1 className="text-5xl font-bold text-white mb-4">
-                Featured Movie Title
+                {featuredMovie?.title || 'Featured Movie Title'}
               </h1>
               <div className="flex items-center gap-4 mb-6 text-white/90">
                 <div className="flex items-center gap-1">
                   <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <span>8.5</span>
+                  <span>{featuredMovie?.rating || '8.5'}</span>
                 </div>
                 <span>•</span>
-                <span>2024</span>
+                <span>{featuredMovie?.year || '2024'}</span>
                 <span>•</span>
-                <span>Action, Thriller</span>
+                <span>{featuredMovie?.genre?.join(', ') || 'Action, Thriller'}</span>
                 <span>•</span>
-                <span>2h 15m</span>
+                <span>{featuredMovie?.duration || '2h 15m'}</span>
               </div>
               <p className="text-white/90 text-lg max-w-2xl mb-8">
-                An epic journey through time and space that will keep you on the edge of your seat.
-                Experience the thrill like never before.
+                {featuredMovie?.description || 'An epic journey through time and space that will keep you on the edge of your seat. Experience the thrill like never before.'}
               </p>
               <div className="flex gap-4">
-                <button className="px-8 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2">
-                  <Film className="w-5 h-5" />
+                <Button 
+                  size="lg"
+                  onClick={() => handleWatchNow(featuredMovie?._id)}
+                  className="px-8 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Play className="w-5 h-5 mr-2 fill-white" />
                   Watch Now
-                </button>
-                <button className="px-8 py-3 bg-white/20 backdrop-blur-sm text-white rounded-lg font-semibold hover:bg-white/30 transition-colors">
+                </Button>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  onClick={() => handleMoreInfo(featuredMovie?._id)}
+                  className="px-8 bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 hover:text-white"
+                >
+                  <Info className="w-5 h-5 mr-2" />
                   More Info
-                </button>
+                </Button>
               </div>
             </div>
           </div>
         </motion.div>
 
         {/* Categories */}
-        <div className="flex gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-2 rounded-full font-medium transition-colors whitespace-nowrap ${
-                selectedCategory === category
-                  ? 'bg-primary text-white'
-                  : 'bg-secondary text-foreground hover:bg-secondary/80'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Browse by Genre</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                onClick={() => {
+                  setSelectedCategory(category)
+                  toast.success(`Showing ${category === 'All' ? 'all' : category} movies`)
+                }}
+                variant={selectedCategory === category ? 'default' : 'outline'}
+                className={`whitespace-nowrap ${
+                  selectedCategory === category
+                    ? 'shadow-md'
+                    : ''
+                }`}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* Movies Grid */}
@@ -143,9 +200,18 @@ const HomePage = () => {
           )}
         </div>
 
-        {/* More Sections */}
+        {/* Continue Watching Section */}
         <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-6">Continue Watching</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Continue Watching</h2>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/history')}
+              className="hover:text-primary"
+            >
+              View All →
+            </Button>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {generateDemoMovies().slice(0, 5).map((movie) => (
               <MovieCard key={`continue-${movie._id}`} movie={movie} />
@@ -153,11 +219,46 @@ const HomePage = () => {
           </div>
         </div>
 
+        {/* Top Rated Section */}
         <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-6">Top Rated</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">Top Rated</h2>
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                navigate('/movies')
+                toast.success('Showing top rated movies')
+              }}
+              className="hover:text-primary"
+            >
+              View All →
+            </Button>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {generateDemoMovies().slice(0, 5).map((movie) => (
               <MovieCard key={`top-${movie._id}`} movie={movie} />
+            ))}
+          </div>
+        </div>
+
+        {/* Trending Section */}
+        <div className="mt-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-primary" />
+              Trending This Week
+            </h2>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/trending')}
+              className="hover:text-primary"
+            >
+              View All →
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {generateDemoMovies().slice(0, 5).map((movie) => (
+              <MovieCard key={`trending-${movie._id}`} movie={movie} />
             ))}
           </div>
         </div>
