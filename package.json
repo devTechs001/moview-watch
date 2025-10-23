@@ -11,7 +11,10 @@
     "client": "npm run dev --workspace=client",
     "server": "npm run dev --workspace=server",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "install:all": "npm install && npm install --workspace=client && npm install --workspace=server"
+    "install:all": "npm install && npm install --workspace=client && npm install --workspace=server",
+    "build": "cd client && npm install && npm run build",
+    "start": "cd server && npm install && npm start",
+    "deploy": "npm run build && npm run start"
   },
   "keywords": [
     "movie",

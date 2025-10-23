@@ -1,0 +1,34 @@
+# GitHub Actions - Auto Deploy to Render
+name: Deploy to Render
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: |
+        cd server && npm install
+        cd ../client && npm install
+        
+    - name: Run tests (if any)
+      run: |
+        echo "Tests would run here"
+        
+    - name: Trigger Render Deployment
+      run: |
+        echo "Render auto-deploys from GitHub"
+        echo "Deployment triggered by push to main branch"
