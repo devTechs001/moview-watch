@@ -13,7 +13,7 @@ const PWAInstallPrompt = () => {
     // Check if running as PWA
     const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches ||
       window.navigator.standalone ||
-      document.referrer.includes('android-app://')
+      (document.referrer && document.referrer.includes('android-app://'))
 
     setIsStandalone(isInStandaloneMode)
 
