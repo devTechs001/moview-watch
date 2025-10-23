@@ -184,50 +184,66 @@ const ChatroomView = () => {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((msg) => (
-            <div
-              key={msg._id}
-              className={`flex ${msg.sender._id === user?._id ? 'justify-end' : 'justify-start'}`}
-            >
-              {msg.sender._id !== user?._id && (
-                <Avatar className="w-8 h-8 mr-2">
-                  <AvatarImage src={msg.sender.avatar} />
-                  <AvatarFallback>{getInitials(msg.sender.name)}</AvatarFallback>
-                </Avatar>
-              )}
-              <div className={`max-w-[70%] ${msg.sender._id === user?._id ? 'items-end' : 'items-start'} flex flex-col`}>
-                {msg.sender._id !== user?._id && (
-                  <span className="text-xs text-muted-foreground mb-1">{msg.sender.name}</span>
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              <div className="text-center">
+                <p className="text-lg mb-2">No messages yet</p>
+                <p className="text-sm">Be the first to send a message!</p>
+              </div>
+            </div>
+          ) : (
+            messages.map((msg) => {
+              // Add null check for sender
+              if (!msg || !msg.sender) return null
+              
+              const isOwnMessage = msg.sender._id === user?._id
+              
+              return (
+              <div
+                key={msg._id}
+                className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+              >
+                {!isOwnMessage && (
+                  <Avatar className="w-8 h-8 mr-2">
+                    <AvatarImage src={msg.sender.avatar} />
+                    <AvatarFallback>{getInitials(msg.sender.name || 'U')}</AvatarFallback>
+                  </Avatar>
                 )}
-                <div
-                  className={`rounded-2xl px-4 py-2 ${
-                    msg.sender._id === user?._id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary'
-                  }`}
-                >
-                  <p>{msg.content}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-xs opacity-70">
-                      {new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                    {msg.reactions && msg.reactions.length > 0 && (
-                      <div className="flex gap-1">
-                        {msg.reactions.map((reaction, idx) => (
-                          <span key={idx} className="text-xs">
-                            {reaction.emoji}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'} flex flex-col`}>
+                  {!isOwnMessage && (
+                    <span className="text-xs text-muted-foreground mb-1">{msg.sender.name || 'Unknown'}</span>
+                  )}
+                  <div
+                    className={`rounded-2xl px-4 py-2 ${
+                      isOwnMessage
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary'
+                    }`}
+                  >
+                    <p>{msg.content}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs opacity-70">
+                        {new Date(msg.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                      {msg.reactions && msg.reactions.length > 0 && (
+                        <div className="flex gap-1">
+                          {msg.reactions.map((reaction, idx) => (
+                            <span key={idx} className="text-xs">
+                              {reaction.emoji}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+              )
+            })
+          )}
           <div ref={messagesEndRef} />
         </div>
 

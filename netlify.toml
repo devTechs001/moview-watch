@@ -1,0 +1,19 @@
+# Netlify Configuration for Frontend
+[build]
+  base = "client"
+  command = "npm run build"
+  publish = "client/dist"
+  
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Environment variables (set in Netlify dashboard)
+# VITE_API_URL = your_backend_url/api
+# VITE_SOCKET_URL = your_backend_url
+# VITE_TMDB_API_KEY = your_tmdb_key
+# VITE_STRIPE_PUBLISHABLE_KEY = your_stripe_key
