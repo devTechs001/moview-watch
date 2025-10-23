@@ -1,0 +1,53 @@
+{
+  "name": "CinemaFlix - Movie Streaming Platform",
+  "short_name": "CinemaFlix",
+  "description": "Stream movies, connect with friends, and discover new content",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "categories": ["entertainment", "video", "social"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Search Movies",
+      "short_name": "Search",
+      "description": "Search for movies",
+      "url": "/search"
+    },
+    {
+      "name": "My Wishlist",
+      "short_name": "Wishlist",
+      "description": "View your wishlist",
+      "url": "/wishlist"
+    },
+    {
+      "name": "Social Feed",
+      "short_name": "Social",
+      "description": "View social feed",
+      "url": "/social"
+    }
+  ],
+  "prefer_related_applications": false
+}
