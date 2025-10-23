@@ -2,6 +2,7 @@ import express from 'express'
 import {
   getPublicChatrooms,
   getUserChatrooms,
+  getChatroom,
   createChatroom,
   joinChatroom,
   leaveChatroom,
@@ -19,6 +20,9 @@ router.get('/public', getPublicChatrooms)
 
 // User chatrooms
 router.get('/my-chatrooms', protect, getUserChatrooms)
+
+// Get single chatroom
+router.get('/:chatroomId', protect, getChatroom)
 
 // Create chatroom
 router.post('/', protect, createChatroom)

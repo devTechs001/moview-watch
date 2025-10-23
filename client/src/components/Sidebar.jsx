@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, Film, Heart, Users, MessageCircle, Settings, User, TrendingUp, Compass, Bookmark, Clock, LayoutDashboard, Shield, Crown, CreditCard, Palette } from 'lucide-react'
+import { Home, Search, Film, Heart, Users, MessageCircle, Settings, User, TrendingUp, Compass, Bookmark, Clock, LayoutDashboard, Shield, Crown, CreditCard, Palette, MessagesSquare, UserPlus } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/Avatar'
 import { getInitials } from '../lib/utils'
@@ -25,9 +25,9 @@ const Sidebar = () => {
   const socialNavItems = [
     { name: 'Social Feed', icon: Users, path: '/social' },
     { name: 'Stories', icon: TrendingUp, path: '/stories' },
-    { name: 'Friends', icon: Users, path: '/friends' },
+    { name: 'Friends', icon: UserPlus, path: '/friends' },
     { name: 'Messages', icon: MessageCircle, path: '/chat' },
-    { name: 'Chatrooms', icon: Users, path: '/chatrooms' },
+    { name: 'Chatrooms', icon: MessagesSquare, path: '/chatrooms' },
   ]
 
   const accountNavItems = [

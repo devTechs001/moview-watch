@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, Users, MessageCircle, User, Film, Heart, Settings, Shield, Palette, UserPlus, TrendingUp } from 'lucide-react'
+import { Home, Search, Users, MessageCircle, User, Film, Heart, Settings, Shield, Palette, UserPlus, TrendingUp, MessagesSquare } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 const MobileNav = () => {
@@ -21,7 +21,7 @@ const MobileNav = () => {
     { name: 'Friends', icon: UserPlus, path: '/friends' },
     { name: 'Stories', icon: TrendingUp, path: '/stories' },
     { name: 'Chat', icon: MessageCircle, path: '/chat' },
-    { name: 'Theme', icon: Palette, path: '/theme' },
+    { name: 'Rooms', icon: MessagesSquare, path: '/chatrooms' },
   ]
 
   const adminNavItems = user?.role === 'admin' ? [

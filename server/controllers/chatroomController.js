@@ -34,6 +34,25 @@ export const getUserChatrooms = async (req, res) => {
   }
 }
 
+// Get single chatroom
+export const getChatroom = async (req, res) => {
+  try {
+    const { chatroomId } = req.params
+    const chatroom = await Chatroom.findById(chatroomId)
+      .populate('creator', 'name avatar')
+      .populate('members.user', 'name avatar')
+      .populate('lastMessage.sender', 'name avatar')
+
+    if (!chatroom) {
+      return res.status(404).json({ message: 'Chatroom not found' })
+    }
+
+    res.json({ chatroom })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch chatroom', error: error.message })
+  }
+}
+
 // Create chatroom
 export const createChatroom = async (req, res) => {
   try {
