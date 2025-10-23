@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-const CACHE_NAME = 'cinemaflix-v1.0.0'
+const CACHE_NAME = 'cinemaflix-v1.0.1'
 const RUNTIME_CACHE = 'cinemaflix-runtime'
 
 // Assets to cache on install
@@ -10,6 +10,13 @@ const PRECACHE_URLS = [
   '/offline.html',
 ]
 
+// Listen for skip waiting message
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
 // Install event - cache essential assets
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing...')
@@ -17,8 +24,6 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[Service Worker] Precaching assets')
       return cache.addAll(PRECACHE_URLS)
-    }).then(() => {
-      return self.skipWaiting()
     })
   )
 })

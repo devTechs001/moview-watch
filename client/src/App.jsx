@@ -8,6 +8,8 @@ import SplashScreen from './components/SplashScreen'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import ThemeProvider from './components/ThemeProvider'
+import PWAInstallPrompt from './components/PWAInstallPrompt'
+import PWAUpdateNotification from './components/PWAUpdateNotification'
 
 // Pages
 import LandingPage from './pages/LandingPage'
@@ -75,6 +77,8 @@ function App() {
 
   return (
     <ThemeProvider>
+      <PWAInstallPrompt />
+      <PWAUpdateNotification />
       <Toaster 
         position="top-right"
         toastOptions={{
