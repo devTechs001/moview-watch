@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { Heart, MessageCircle, Share2, Send, MoreVertical, Image as ImageIcon, Video, X } from 'lucide-react'
+import { Heart, MessageCircle, Share2, Send, MoreVertical, Image as ImageIcon, Video, X, Repeat2 } from 'lucide-react'
 import Layout from '../components/Layout'
 import { Card, CardContent } from '../components/ui/Card'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import MediaUpload from '../components/MediaUpload'
+import PostOptions from '../components/PostOptions'
 import axios from '../lib/axios'
 import { useAuthStore } from '../store/authStore'
 import { getInitials, formatDate } from '../lib/utils'
@@ -136,11 +137,64 @@ const EnhancedSocialFeed = () => {
   }
 
   const handleSharePost = async (postId) => {
+    const post = posts.find(p => p._id === postId)
+    const shareUrl = `${window.location.origin}/post/${postId}`
+    const shareText = `Check out this post: ${post?.content?.substring(0, 100) || 'Interesting content'}`
+
+    // Try native share API first
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Share Post',
+          text: shareText,
+          url: shareUrl,
+        })
+        
+        // Track share on backend
+        await axios.post(`/posts/${postId}/share`)
+        toast.success('Post shared!')
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          // Fallback to clipboard
+          navigator.clipboard.writeText(shareUrl)
+          toast.success('Link copied to clipboard!')
+        }
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(shareUrl)
+      toast.success('Link copied to clipboard!')
+      
+      // Track share on backend
+      try {
+        await axios.post(`/posts/${postId}/share`)
+      } catch (error) {
+        console.error('Share tracking failed:', error)
+      }
+    }
+  }
+
+  const handleEditPost = (post) => {
+    setNewPostContent(post.content)
+    toast('Edit feature coming soon!', { icon: '✏️' })
+  }
+
+  const handleDeletePost = async (postId) => {
     try {
-      await axios.post(`/posts/${postId}/share`)
-      toast.success('Post shared!')
+      await axios.delete(`/posts/${postId}`)
+      setPosts(posts.filter(p => p._id !== postId))
+      toast.success('Post deleted!')
     } catch (error) {
-      toast.error('Failed to share post')
+      toast.error('Failed to delete post')
+    }
+  }
+
+  const handleReportPost = async (postId, reason) => {
+    try {
+      await axios.post(`/posts/${postId}/report`, { reason })
+      toast.success('Post reported. We\'ll review it shortly.')
+    } catch (error) {
+      toast.error('Failed to report post')
     }
   }
 
@@ -247,6 +301,9 @@ const EnhancedSocialFeed = () => {
               currentUser={user}
               onLike={handleLikePost}
               onShare={handleSharePost}
+              onEdit={handleEditPost}
+              onDelete={handleDeletePost}
+              onReport={handleReportPost}
             />
           ))}
 
@@ -286,7 +343,7 @@ const EnhancedSocialFeed = () => {
   )
 }
 
-const PostCard = ({ post, currentUser, onLike, onShare }) => {
+const PostCard = ({ post, currentUser, onLike, onShare, onEdit, onDelete, onReport }) => {
   const [showComments, setShowComments] = useState(false)
   const [comments, setComments] = useState(post.comments || [])
   const [newComment, setNewComment] = useState('')
@@ -333,14 +390,13 @@ const PostCard = ({ post, currentUser, onLike, onShare }) => {
               </p>
             </div>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="hover:bg-secondary"
-            onClick={() => toast('Post options coming soon!', { icon: '⚙️' })}
-          >
-            <MoreVertical className="w-5 h-5" />
-          </Button>
+          <PostOptions
+            post={post}
+            currentUser={currentUser}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onReport={onReport}
+          />
         </div>
 
         {/* Post Content */}
@@ -367,9 +423,15 @@ const PostCard = ({ post, currentUser, onLike, onShare }) => {
 
         {/* Post Stats */}
         <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4 pb-4 border-b border-border/50">
-          <span>{post.likeCount || post.likes?.length || 0} likes</span>
-          <span>{post.commentCount || comments.length} comments</span>
-          <span>{post.shareCount || post.shares?.length || 0} shares</span>
+          <button className="hover:underline transition-colors">
+            <span className="font-semibold text-foreground">{post.likeCount || post.likes?.length || 0}</span> likes
+          </button>
+          <button className="hover:underline transition-colors">
+            <span className="font-semibold text-foreground">{post.commentCount || comments.length}</span> comments
+          </button>
+          <button className="hover:underline transition-colors">
+            <span className="font-semibold text-foreground">{post.shareCount || post.shares?.length || 0}</span> shares
+          </button>
         </div>
 
         {/* Post Actions */}
@@ -395,13 +457,10 @@ const PostCard = ({ post, currentUser, onLike, onShare }) => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => {
-              onShare(post._id)
-              toast.success('Post shared!')
-            }}
-            className="flex-1 hover:bg-secondary transition-colors"
+            onClick={() => onShare(post._id)}
+            className="flex-1 hover:bg-secondary transition-colors group"
           >
-            <Share2 className="w-5 h-5 mr-2" />
+            <Share2 className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
             Share
           </Button>
         </div>

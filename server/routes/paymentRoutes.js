@@ -308,4 +308,62 @@ router.get('/history', protect, async (req, res) => {
   }
 })
 
+// Get subscription plans
+router.get('/plans', async (req, res) => {
+  try {
+    const plans = [
+      {
+        id: 'basic_monthly',
+        name: 'Basic',
+        price: 9.99,
+        currency: 'USD',
+        interval: 'month',
+        features: [
+          'HD Quality',
+          '1 Device',
+          'Limited Content',
+          'Ads Supported'
+        ],
+        popular: false
+      },
+      {
+        id: 'premium_monthly',
+        name: 'Premium',
+        price: 14.99,
+        currency: 'USD',
+        interval: 'month',
+        features: [
+          'Full HD Quality',
+          '2 Devices',
+          'Full Content Library',
+          'Ad-Free',
+          'Download Content'
+        ],
+        popular: true
+      },
+      {
+        id: 'ultimate_monthly',
+        name: 'Ultimate',
+        price: 19.99,
+        currency: 'USD',
+        interval: 'month',
+        features: [
+          '4K Ultra HD',
+          '4 Devices',
+          'Full Content Library',
+          'Ad-Free',
+          'Download Content',
+          'Early Access',
+          'Priority Support'
+        ],
+        popular: false
+      }
+    ]
+
+    res.json({ plans })
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to get plans', error: error.message })
+  }
+})
+
 export default router

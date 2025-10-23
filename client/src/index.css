@@ -112,7 +112,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary/50 rounded-full;
+  @apply bg-primary rounded-full opacity-50;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -246,7 +246,9 @@
 }
 
 .badge-primary {
-  @apply bg-primary/10 text-primary border border-primary/20;
+  @apply text-primary border;
+  background-color: rgb(from var(--primary) r g b / 0.1);
+  border-color: rgb(from var(--primary) r g b / 0.2);
 }
 
 .badge-secondary {
@@ -254,13 +256,25 @@
 }
 
 .badge-success {
-  @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
+  @apply bg-green-100 text-green-800 dark:text-green-400;
+}
+
+.dark .badge-success {
+  background-color: rgb(20 83 45 / 0.3);
 }
 
 .badge-warning {
-  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400;
+  @apply bg-yellow-100 text-yellow-800 dark:text-yellow-400;
+}
+
+.dark .badge-warning {
+  background-color: rgb(113 63 18 / 0.3);
 }
 
 .badge-danger {
-  @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+  @apply bg-red-100 text-red-800 dark:text-red-400;
+}
+
+.dark .badge-danger {
+  background-color: rgb(127 29 29 / 0.3);
 }

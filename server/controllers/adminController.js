@@ -200,3 +200,125 @@ export const updateReport = async (req, res) => {
     })
   }
 }
+
+// @desc    Get comments
+// @route   GET /api/admin/comments
+// @access  Private/Admin
+export const getComments = async (req, res) => {
+  try {
+    const { filter = 'all' } = req.query
+    
+    // Mock data for now
+    const comments = [
+      {
+        _id: '1',
+        text: 'Great movie! Loved the cinematography.',
+        user: { name: 'John Doe', avatar: '', email: 'john@example.com' },
+        post: { _id: 'p1', content: 'Just watched this amazing film!' },
+        movie: { title: 'Inception' },
+        isFlagged: false,
+        createdAt: new Date(),
+      },
+      {
+        _id: '2',
+        text: 'This is spam content',
+        user: { name: 'Spammer', avatar: '', email: 'spam@example.com' },
+        post: { _id: 'p2', content: 'Check out my post' },
+        movie: { title: 'The Matrix' },
+        isFlagged: true,
+        createdAt: new Date(Date.now() - 3600000),
+      },
+    ]
+    
+    const filteredComments = filter === 'all' 
+      ? comments 
+      : filter === 'flagged'
+      ? comments.filter(c => c.isFlagged)
+      : comments.filter(c => !c.isFlagged)
+    
+    res.json({
+      success: true,
+      comments: filteredComments,
+      count: filteredComments.length,
+    })
+  } catch (error) {
+    console.error('Get comments error:', error)
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    })
+  }
+}
+
+// @desc    Get comment stats
+// @route   GET /api/admin/comments/stats
+// @access  Private/Admin
+export const getCommentStats = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      stats: {
+        total: 2,
+        flagged: 1,
+        approved: 1
+      }
+    })
+  } catch (error) {
+    console.error('Get comment stats error:', error)
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    })
+  }
+}
+
+// @desc    Flag comment
+// @route   PUT /api/admin/comments/:id/flag
+// @access  Private/Admin
+export const flagComment = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      message: 'Comment flagged'
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    })
+  }
+}
+
+// @desc    Approve comment
+// @route   PUT /api/admin/comments/:id/approve
+// @access  Private/Admin
+export const approveComment = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      message: 'Comment approved'
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    })
+  }
+}
+
+// @desc    Delete comment
+// @route   DELETE /api/admin/comments/:id
+// @access  Private/Admin
+export const deleteComment = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      message: 'Comment deleted'
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    })
+  }
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, X, Heart, Eye, Send, Smile, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import Layout from '../components/Layout'
-import CreateStoryModal from '../components/CreateStoryModal'
+import EnhancedCreateStoryModal from '../components/EnhancedCreateStoryModal'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
 import axios from '../lib/axios'
@@ -99,7 +99,7 @@ const StoriesPage = () => {
           )}
         </AnimatePresence>
 
-        <CreateStoryModal
+        <EnhancedCreateStoryModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           onStoryCreated={handleStoryCreated}

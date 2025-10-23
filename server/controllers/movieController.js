@@ -41,6 +41,27 @@ export const getMovies = async (req, res) => {
   }
 }
 
+// @desc    Get featured movie
+// @route   GET /api/movies/featured
+// @access  Public
+export const getFeaturedMovie = async (req, res) => {
+  try {
+    // Get the highest rated or most viewed movie
+    const movie = await Movie.findOne({ status: 'active' })
+      .sort({ rating: -1, views: -1 })
+      .populate('addedBy', 'name')
+    
+    if (!movie) {
+      return res.status(404).json({ message: 'No featured movie found' })
+    }
+
+    res.json({ movie })
+  } catch (error) {
+    console.error('Get featured movie error:', error)
+    res.status(500).json({ message: error.message })
+  }
+}
+
 // @desc    Get single movie
 // @route   GET /api/movies/:id
 // @access  Public

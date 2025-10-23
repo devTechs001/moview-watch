@@ -7,12 +7,14 @@ import {
   deleteMovie,
   likeMovie,
   rateMovie,
+  getFeaturedMovie,
 } from '../controllers/movieController.js'
 import { protect, adminOnly } from '../middleware/auth.js'
 
 const router = express.Router()
 
 router.route('/').get(getMovies).post(protect, adminOnly, createMovie)
+router.route('/featured').get(getFeaturedMovie)
 router.route('/search').get(getMovies)
 router
   .route('/:id')

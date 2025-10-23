@@ -23,17 +23,27 @@ export const createPost = async (req, res) => {
       .populate('user', 'name avatar')
       .populate('sharedMovie', 'title poster rating')
 
-    // Create social activity
-    await SocialActivity.create({
-      user: req.user._id,
-      type: 'posted',
-      visibility: visibility || 'public',
-      metadata: { postId: post._id },
-    })
+    // Create social activity (optional - don't fail if this fails)
+    try {
+      await SocialActivity.create({
+        user: req.user._id,
+        type: 'posted',
+        visibility: visibility || 'public',
+        metadata: { postId: post._id },
+      })
+    } catch (activityError) {
+      console.warn('Social activity creation failed (non-critical):', activityError.message)
+    }
 
-    // Emit Socket.io event
-    const io = req.app.get('io')
-    io.emit('new_post', populatedPost)
+    // Emit Socket.io event (optional)
+    try {
+      const io = req.app.get('io')
+      if (io) {
+        io.emit('new_post', populatedPost)
+      }
+    } catch (socketError) {
+      console.warn('Socket.io emit failed (non-critical):', socketError.message)
+    }
 
     res.status(201).json({ post: populatedPost })
   } catch (error) {

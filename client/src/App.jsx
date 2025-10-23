@@ -50,6 +50,7 @@ import AdminSubscriptions from './pages/admin/AdminSubscriptions'
 import EnhancedThemeSelector from './pages/admin/EnhancedThemeSelector'
 import AdminReports from './pages/admin/AdminReports'
 import AdminActivityLog from './pages/admin/AdminActivityLog'
+import AdminComments from './pages/admin/AdminComments'
 import ThemeDebugPage from './pages/ThemeDebugPage'
 
 function App() {
@@ -259,6 +260,11 @@ function App() {
         <Route path="/admin/activity" element={
           <AdminRoute>
             <AdminActivityLog />
+          </AdminRoute>
+        } />
+        <Route path="/admin/comments" element={
+          <AdminRoute>
+            <AdminComments />
           </AdminRoute>
         } />
 

@@ -8,7 +8,7 @@ const postSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true,
+    required: false, // Optional - can post media without text
     maxlength: 5000,
   },
   type: {
@@ -62,6 +62,14 @@ const postSchema = new mongoose.Schema({
   editedAt: Date,
 }, {
   timestamps: true,
+})
+
+// Custom validation: require either content or media
+postSchema.pre('validate', function(next) {
+  if (!this.content && (!this.media || this.media.length === 0) && !this.sharedMovie) {
+    this.invalidate('content', 'Post must have content, media, or a shared movie')
+  }
+  next()
 })
 
 // Index for faster queries
