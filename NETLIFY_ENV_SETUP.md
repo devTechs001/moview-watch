@@ -123,9 +123,13 @@ If you haven't deployed your backend yet, you need to:
 **Cause**: Missing or incorrect `VITE_SOCKET_URL`
 **Fix**: Set correct WebSocket URL (same as API URL without `/api`)
 
-### Issue: Payment not working
-**Cause**: Missing `VITE_STRIPE_PUBLISHABLE_KEY`
-**Fix**: Add Stripe publishable key from Stripe dashboard
+### Issue: M-Pesa payment not working
+**Cause**: Missing M-Pesa credentials or incorrect configuration
+**Fix**: 
+1. Get credentials from Safaricom Daraja Portal
+2. Set `VITE_MPESA_CONSUMER_KEY` and `VITE_MPESA_CONSUMER_SECRET`
+3. Ensure backend has M-Pesa integration configured
+4. Test with Safaricom test credentials first
 
 ## CORS Configuration (Backend)
 

@@ -6,17 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import axios from '../lib/axios'
 import toast from 'react-hot-toast'
-import { loadStripe } from '@stripe/stripe-js'
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-
-// Initialize Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+// No external payment library imports needed - using native integrations
 
 const SubscriptionCheckout = () => {
   const [searchParams] = useSearchParams()
   const planId = searchParams.get('plan')
   const [selectedPlan, setSelectedPlan] = useState(null)
-  const [selectedGateway, setSelectedGateway] = useState('stripe')
+  const [selectedGateway, setSelectedGateway] = useState('mpesa')
   const [loading, setLoading] = useState(true)
   const [plans, setPlans] = useState([])
   const navigate = useNavigate()
@@ -43,42 +39,36 @@ const SubscriptionCheckout = () => {
 
   const paymentGateways = [
     {
-      id: 'stripe',
-      name: 'Credit/Debit Card',
-      icon: CreditCard,
-      description: 'Visa, Mastercard, Amex',
+      id: 'mpesa',
+      name: 'M-Pesa',
+      icon: '📱',
+      description: 'Lipa na M-Pesa',
       available: true,
-    },
-    {
-      id: 'paypal',
-      name: 'PayPal',
-      icon: '💳',
-      description: 'Pay with PayPal account',
-      available: true,
-    },
-    {
-      id: 'razorpay',
-      name: 'Razorpay',
-      icon: '🇮🇳',
-      description: 'UPI, Cards, Netbanking',
-      available: true,
-      region: 'India',
+      region: 'Kenya',
     },
     {
       id: 'flutterwave',
       name: 'Flutterwave',
       icon: '🌍',
-      description: 'Mobile Money, Cards',
+      description: 'Mobile Money, Cards, Bank',
       available: true,
       region: 'Africa',
     },
     {
       id: 'paystack',
       name: 'Paystack',
-      icon: '🌍',
-      description: 'Cards, Bank Transfer',
+      icon: '💳',
+      description: 'Cards, Bank Transfer, USSD',
       available: true,
       region: 'Africa',
+    },
+    {
+      id: 'paypal',
+      name: 'PayPal',
+      icon: '🌐',
+      description: 'International payments',
+      available: true,
+      region: 'Global',
     },
   ]
 
@@ -231,16 +221,8 @@ const SubscriptionCheckout = () => {
                 <div className="divider"></div>
 
                 {/* Payment Form */}
-                {selectedGateway === 'stripe' && (
-                  <StripePaymentForm plan={selectedPlan} />
-                )}
-
-                {selectedGateway === 'paypal' && (
-                  <PayPalPaymentForm plan={selectedPlan} />
-                )}
-
-                {selectedGateway === 'razorpay' && (
-                  <RazorpayPaymentForm plan={selectedPlan} />
+                {selectedGateway === 'mpesa' && (
+                  <MpesaPaymentForm plan={selectedPlan} />
                 )}
 
                 {selectedGateway === 'flutterwave' && (
@@ -249,6 +231,10 @@ const SubscriptionCheckout = () => {
 
                 {selectedGateway === 'paystack' && (
                   <PaystackPaymentForm plan={selectedPlan} />
+                )}
+
+                {selectedGateway === 'paypal' && (
+                  <PayPalPaymentForm plan={selectedPlan} />
                 )}
               </CardContent>
             </Card>
@@ -259,141 +245,322 @@ const SubscriptionCheckout = () => {
   )
 }
 
-// Stripe Payment Form Component
-const StripePaymentForm = ({ plan }) => {
-  const [clientSecret, setClientSecret] = useState('')
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    createPaymentIntent()
-  }, [])
-
-  const createPaymentIntent = async () => {
-    try {
-      const response = await axios.post('/payment/create', {
-        gateway: 'stripe',
-        planId: plan.id,
-        amount: plan.price,
-        currency: plan.currency.toLowerCase(),
-      })
-      setClientSecret(response.data.payment.clientSecret)
-    } catch (error) {
-      toast.error('Failed to initialize payment')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  return (
-    <Elements stripe={stripePromise} options={{ clientSecret }}>
-      <StripeCheckoutForm clientSecret={clientSecret} />
-    </Elements>
-  )
-}
-
-const StripeCheckoutForm = ({ clientSecret }) => {
-  const stripe = useStripe()
-  const elements = useElements()
+// M-Pesa Payment Form Component
+const MpesaPaymentForm = ({ plan }) => {
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [processing, setProcessing] = useState(false)
+  const [checkoutRequestId, setCheckoutRequestId] = useState(null)
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!stripe || !elements) return
+    if (!phoneNumber || phoneNumber.length < 10) {
+      toast.error('Please enter a valid phone number')
+      return
+    }
 
     setProcessing(true)
 
     try {
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/payment/success`,
-        },
-        redirect: 'if_required',
+      const response = await axios.post('/payment/mpesa/initiate', {
+        phoneNumber,
+        amount: plan.price,
+        planId: plan.id,
       })
 
-      if (error) {
-        toast.error(error.message)
-      } else if (paymentIntent.status === 'succeeded') {
-        toast.success('Payment successful!')
-        navigate('/payment/success')
-      }
+      setCheckoutRequestId(response.data.checkoutRequestId)
+      toast.success('STK push sent! Check your phone to complete payment')
+
+      // Poll for payment status
+      pollPaymentStatus(response.data.checkoutRequestId)
     } catch (error) {
-      toast.error('Payment failed')
-    } finally {
+      toast.error(error.response?.data?.message || 'Failed to initiate payment')
       setProcessing(false)
     }
   }
 
+  const pollPaymentStatus = async (requestId) => {
+    let attempts = 0
+    const maxAttempts = 30 // 30 seconds
+
+    const interval = setInterval(async () => {
+      attempts++
+
+      try {
+        const response = await axios.get(`/payment/mpesa/status/${requestId}`)
+
+        if (response.data.status === 'completed') {
+          clearInterval(interval)
+          toast.success('Payment successful!')
+          navigate('/subscription')
+        } else if (response.data.status === 'failed') {
+          clearInterval(interval)
+          toast.error('Payment failed. Please try again.')
+          setProcessing(false)
+        }
+      } catch (error) {
+        console.error('Status check error:', error)
+      }
+
+      if (attempts >= maxAttempts) {
+        clearInterval(interval)
+        toast.error('Payment timeout. Please check your transaction status.')
+        setProcessing(false)
+      }
+    }, 1000)
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          M-Pesa Phone Number
+        </label>
+        <input
+          type="tel"
+          placeholder="254712345678"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          disabled={processing}
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Enter your Safaricom number (format: 254XXXXXXXXX)
+        </p>
+      </div>
+
+      <div className="bg-secondary/50 p-4 rounded-lg">
+        <p className="text-sm font-medium mb-2">Amount to Pay:</p>
+        <p className="text-2xl font-bold">KES {(plan.price * 130).toFixed(2)}</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          ≈ ${plan.price} USD
+        </p>
+      </div>
+
       <Button
         type="submit"
-        disabled={!stripe || processing}
+        disabled={processing}
         className="w-full"
         size="lg"
       >
         {processing ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Processing...
+            Waiting for payment...
           </>
         ) : (
           <>
             <Shield className="w-4 h-4 mr-2" />
-            Pay Securely
+            Pay with M-Pesa
           </>
         )}
       </Button>
+
+      {processing && (
+        <div className="text-center text-sm text-muted-foreground">
+          <p>Check your phone for the M-Pesa prompt</p>
+          <p className="mt-1">Enter your M-Pesa PIN to complete payment</p>
+        </div>
+      )}
     </form>
   )
 }
 
-// Placeholder components for other payment gateways
-const PayPalPaymentForm = ({ plan }) => (
-  <div className="text-center py-8">
-    <p className="text-muted-foreground mb-4">PayPal integration coming soon</p>
-    <Button onClick={() => toast('PayPal payment will be available soon', { icon: '💳' })}>
-      Continue with PayPal
-    </Button>
-  </div>
-)
+// Flutterwave Payment Form
+const FlutterwavePaymentForm = ({ plan }) => {
+  const [processing, setProcessing] = useState(false)
+  const navigate = useNavigate()
 
-const RazorpayPaymentForm = ({ plan }) => (
-  <div className="text-center py-8">
-    <p className="text-muted-foreground mb-4">Razorpay integration coming soon</p>
-    <Button onClick={() => toast('Razorpay payment will be available soon', { icon: '🇮🇳' })}>
-      Continue with Razorpay
-    </Button>
-  </div>
-)
+  const handlePayment = async () => {
+    setProcessing(true)
 
-const FlutterwavePaymentForm = ({ plan }) => (
-  <div className="text-center py-8">
-    <p className="text-muted-foreground mb-4">Flutterwave integration coming soon</p>
-    <Button onClick={() => toast('Flutterwave payment will be available soon', { icon: '🌍' })}>
-      Continue with Flutterwave
-    </Button>
-  </div>
-)
+    try {
+      const response = await axios.post('/payment/flutterwave/initiate', {
+        amount: plan.price,
+        planId: plan.id,
+      })
 
-const PaystackPaymentForm = ({ plan }) => (
-  <div className="text-center py-8">
-    <p className="text-muted-foreground mb-4">Paystack integration coming soon</p>
-    <Button onClick={() => toast('Paystack payment will be available soon', { icon: '🌍' })}>
-      Continue with Paystack
-    </Button>
-  </div>
-)
+      // Redirect to Flutterwave payment page
+      window.location.href = response.data.paymentLink
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to initiate payment')
+      setProcessing(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-secondary/50 p-4 rounded-lg">
+        <p className="text-sm font-medium mb-2">Payment Methods Available:</p>
+        <ul className="text-sm space-y-1">
+          <li>✓ Mobile Money (M-Pesa, MTN, Airtel)</li>
+          <li>✓ Credit/Debit Cards</li>
+          <li>✓ Bank Transfer</li>
+          <li>✓ USSD</li>
+        </ul>
+      </div>
+
+      <div className="bg-secondary/50 p-4 rounded-lg">
+        <p className="text-sm font-medium mb-2">Amount to Pay:</p>
+        <p className="text-2xl font-bold">${plan.price}</p>
+      </div>
+
+      <Button
+        onClick={handlePayment}
+        disabled={processing}
+        className="w-full"
+        size="lg"
+      >
+        {processing ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Redirecting...
+          </>
+        ) : (
+          <>
+            <Shield className="w-4 h-4 mr-2" />
+            Continue to Flutterwave
+          </>
+        )}
+      </Button>
+    </div>
+  )
+}
+
+// Paystack Payment Form
+const PaystackPaymentForm = ({ plan }) => {
+  const [processing, setProcessing] = useState(false)
+  const [email, setEmail] = useState('')
+  const navigate = useNavigate()
+
+  const handlePayment = async () => {
+    if (!email) {
+      toast.error('Please enter your email')
+      return
+    }
+
+    setProcessing(true)
+
+    try {
+      const response = await axios.post('/payment/paystack/initiate', {
+        email,
+        amount: plan.price,
+        planId: plan.id,
+      })
+
+      // Redirect to Paystack payment page
+      window.location.href = response.data.authorizationUrl
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to initiate payment')
+      setProcessing(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          Email Address
+        </label>
+        <input
+          type="email"
+          placeholder="your@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+          disabled={processing}
+        />
+      </div>
+
+      <div className="bg-secondary/50 p-4 rounded-lg">
+        <p className="text-sm font-medium mb-2">Payment Methods Available:</p>
+        <ul className="text-sm space-y-1">
+          <li>✓ Credit/Debit Cards</li>
+          <li>✓ Bank Transfer</li>
+          <li>✓ USSD</li>
+          <li>✓ Mobile Money</li>
+        </ul>
+      </div>
+
+      <div className="bg-secondary/50 p-4 rounded-lg">
+        <p className="text-sm font-medium mb-2">Amount to Pay:</p>
+        <p className="text-2xl font-bold">${plan.price}</p>
+      </div>
+
+      <Button
+        onClick={handlePayment}
+        disabled={processing || !email}
+        className="w-full"
+        size="lg"
+      >
+        {processing ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Redirecting...
+          </>
+        ) : (
+          <>
+            <Shield className="w-4 h-4 mr-2" />
+            Continue to Paystack
+          </>
+        )}
+      </Button>
+    </div>
+  )
+}
+
+// PayPal Payment Form
+const PayPalPaymentForm = ({ plan }) => {
+  const [processing, setProcessing] = useState(false)
+
+  const handlePayment = async () => {
+    setProcessing(true)
+
+    try {
+      const response = await axios.post('/payment/paypal/create-order', {
+        amount: plan.price,
+        planId: plan.id,
+      })
+
+      // Redirect to PayPal
+      const approvalUrl = response.data.links?.find(link => link.rel === 'approve')?.href
+      if (approvalUrl) {
+        window.location.href = approvalUrl
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create PayPal order')
+      setProcessing(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-secondary/50 p-4 rounded-lg">
+        <p className="text-sm font-medium mb-2">Amount to Pay:</p>
+        <p className="text-2xl font-bold">${plan.price}</p>
+      </div>
+
+      <Button
+        onClick={handlePayment}
+        disabled={processing}
+        className="w-full bg-[#0070ba] hover:bg-[#003087]"
+        size="lg"
+      >
+        {processing ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Redirecting...
+          </>
+        ) : (
+          <>
+            <Shield className="w-4 h-4 mr-2" />
+            Continue with PayPal
+          </>
+        )}
+      </Button>
+    </div>
+  )
+}
 
 export default SubscriptionCheckout
