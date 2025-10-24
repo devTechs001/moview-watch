@@ -27,10 +27,20 @@ if (typeof window !== 'undefined') {
   useThemeStore.getState().init()
 }
 
+// Determine basename based on deployment environment
+const getBasename = () => {
+  // For GitHub Pages deployment
+  if (window.location.hostname.includes('github.io')) {
+    return '/moview-watch'
+  }
+  // For Netlify or other deployments, use root path
+  return '/'
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter
-      basename="/moview-watch"
+      basename={getBasename()}
       future={{
         v7_startTransition: true,
         v7_relativeSplatPath: true,

@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "homepage": "https://devTechs001.github.io/moview-watch",
+  "homepage": "https://cinemaflx.netlify.app",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
