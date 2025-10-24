@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Download, Search, Film, TrendingUp, Star } from 'lucide-react'
-import Navbar from '../../components/Navbar'
+import AdminLayout from '../../components/AdminLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -190,7 +190,7 @@ const TMDBImporter = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AdminLayout>
   )
 }
 

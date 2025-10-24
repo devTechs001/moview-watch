@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MessageCircle, Trash2, Flag, Check, X, Search, Film } from 'lucide-react'
+import AdminLayout from '../../components/AdminLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -107,16 +108,17 @@ const AdminComments = () => {
   )
 
   return (
-    <div className="space-y-6">
+    <AdminLayout>
+      <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2 text-gradient">Comments Management</h1>
+        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">Comments Management</h1>
         <p className="text-muted-foreground text-lg">Moderate and manage user comments across the platform</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card elevated className="hover-lift border-l-4 border-l-primary">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary bg-gradient-to-br from-card to-card/50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -130,7 +132,7 @@ const AdminComments = () => {
           </CardContent>
         </Card>
 
-        <Card elevated className="hover-lift border-l-4 border-l-destructive">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-destructive bg-gradient-to-br from-card to-card/50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -144,7 +146,7 @@ const AdminComments = () => {
           </CardContent>
         </Card>
 
-        <Card elevated className="hover-lift border-l-4 border-l-green-500">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 bg-gradient-to-br from-card to-card/50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -160,8 +162,8 @@ const AdminComments = () => {
       </div>
 
       {/* Filters and Search */}
-      <Card elevated>
-        <CardContent className="p-6">
+      <Card className="shadow-md">
+        <CardContent className="p-4 md:p-6">
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="flex gap-2 flex-wrap">
               <Button
@@ -227,14 +229,12 @@ const AdminComments = () => {
           </Card>
         ) : (
           filteredComments.map((comment) => (
-            <Card 
-              key={comment._id} 
-              elevated
-              interactive
-              className={`hover-lift transition-all ${
+            <Card
+              key={comment._id}
+              className={`hover:shadow-lg transition-all duration-300 ${
                 comment.isFlagged 
-                  ? 'border-l-4 border-l-destructive bg-destructive/5' 
-                  : 'border-l-4 border-l-transparent hover:border-l-primary'
+                  ? 'border-l-4 border-l-destructive bg-destructive/5 dark:bg-destructive/10' 
+                  : 'border-l-4 border-l-transparent hover:border-l-primary hover:shadow-primary/10'
               }`}
             >
               <CardContent className="p-6">
@@ -315,6 +315,7 @@ const AdminComments = () => {
         )}
       </div>
     </div>
+    </AdminLayout>
   )
 }
 

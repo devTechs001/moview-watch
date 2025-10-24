@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Search, Ban, CheckCircle, Trash2 } from 'lucide-react'
-import Navbar from '../../components/Navbar'
+import AdminLayout from '../../components/AdminLayout'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -21,8 +21,7 @@ const AdminUsers = () => {
   )
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-8">Manage Users</h1>
 
@@ -93,7 +92,7 @@ const AdminUsers = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AdminLayout>
   )
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, Search, Edit, Trash2, Eye, Star } from 'lucide-react'
-import Navbar from '../../components/Navbar'
+import AdminLayout from '../../components/AdminLayout'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
@@ -24,8 +24,7 @@ const AdminMovies = () => {
   )
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold">Manage Movies</h1>
@@ -103,7 +102,7 @@ const AdminMovies = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AdminLayout>
   )
 }
 

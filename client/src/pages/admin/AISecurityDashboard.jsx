@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Shield, AlertTriangle, CheckCircle, Activity, Brain, Zap } from 'lucide-react'
-import Navbar from '../../components/Navbar'
+import AdminLayout from '../../components/AdminLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import axios from '../../lib/axios'
@@ -60,8 +60,7 @@ const AISecurityDashboard = () => {
   }[severity])
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -193,7 +192,7 @@ const AISecurityDashboard = () => {
           </>
         )}
       </div>
-    </div>
+    </AdminLayout>
   )
 }
 

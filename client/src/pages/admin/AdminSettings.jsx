@@ -1,12 +1,11 @@
-import Navbar from '../../components/Navbar'
+import AdminLayout from '../../components/AdminLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 
 const AdminSettings = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <h1 className="text-4xl font-bold mb-8">Admin Settings</h1>
 
@@ -39,7 +38,7 @@ const AdminSettings = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AdminLayout>
   )
 }
 
