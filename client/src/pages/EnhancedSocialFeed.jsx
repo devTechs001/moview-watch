@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Heart, MessageCircle, Share2, Send, MoreVertical, Image as ImageIcon, Video, X, Repeat2 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import Layout from '../components/Layout'
 import { Card, CardContent } from '../components/ui/Card'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
@@ -7,9 +8,11 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import MediaUpload from '../components/MediaUpload'
 import PostOptions from '../components/PostOptions'
+import EnhancedComments from '../components/EnhancedComments'
+import EnhancedLikeShare from '../components/EnhancedLikeShare'
 import axios from '../lib/axios'
 import { useAuthStore } from '../store/authStore'
-import { getInitials, formatDate } from '../lib/utils'
+import { getInitials, formatDate, SOCKET_URL } from '../lib/utils'
 import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
 
@@ -29,7 +32,7 @@ const EnhancedSocialFeed = () => {
     fetchPosts()
     
     // Setup Socket.io
-    const newSocket = io('http://localhost:5000')
+    const newSocket = io(SOCKET_URL)
     setSocket(newSocket)
 
     // Listen for real-time updates
@@ -198,6 +201,15 @@ const EnhancedSocialFeed = () => {
     }
   }
 
+  const handleBookmark = async (postId) => {
+    try {
+      const response = await axios.post(`/posts/${postId}/bookmark`)
+      toast.success(response.data.bookmarked ? 'Bookmarked!' : 'Removed from bookmarks')
+    } catch (error) {
+      toast.error('Failed to bookmark post')
+    }
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -304,6 +316,7 @@ const EnhancedSocialFeed = () => {
               onEdit={handleEditPost}
               onDelete={handleDeletePost}
               onReport={handleReportPost}
+              onBookmark={handleBookmark}
             />
           ))}
 
@@ -343,35 +356,8 @@ const EnhancedSocialFeed = () => {
   )
 }
 
-const PostCard = ({ post, currentUser, onLike, onShare, onEdit, onDelete, onReport }) => {
+const PostCard = ({ post, currentUser, onLike, onShare, onEdit, onDelete, onReport, onBookmark }) => {
   const [showComments, setShowComments] = useState(false)
-  const [comments, setComments] = useState(post.comments || [])
-  const [newComment, setNewComment] = useState('')
-  const [isLiked, setIsLiked] = useState(
-    post.likes?.includes(currentUser?._id) || false
-  )
-
-  const handleAddComment = async (e) => {
-    e.preventDefault()
-    if (!newComment.trim()) return
-
-    try {
-      const response = await axios.post(`/posts/${post._id}/comments`, {
-        text: newComment,
-      })
-
-      setComments([response.data.comment, ...comments])
-      setNewComment('')
-      toast.success('Comment added!')
-    } catch (error) {
-      toast.error('Failed to add comment')
-    }
-  }
-
-  const handleLike = () => {
-    setIsLiked(!isLiked)
-    onLike(post._id)
-  }
 
   return (
     <Card elevated interactive className="hover-lift">
@@ -434,86 +420,29 @@ const PostCard = ({ post, currentUser, onLike, onShare, onEdit, onDelete, onRepo
           </button>
         </div>
 
-        {/* Post Actions */}
-        <div className="flex items-center gap-1 mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLike}
-            className={`flex-1 transition-all duration-200 ${isLiked ? 'text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20' : 'hover:bg-secondary'}`}
-          >
-            <Heart className={`w-5 h-5 mr-2 transition-transform ${isLiked ? 'fill-red-500 scale-110' : ''}`} />
-            {isLiked ? 'Liked' : 'Like'}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowComments(!showComments)}
-            className="flex-1 hover:bg-secondary transition-colors"
-          >
-            <MessageCircle className="w-5 h-5 mr-2" />
-            Comment
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => onShare(post._id)}
-            className="flex-1 hover:bg-secondary transition-colors group"
-          >
-            <Share2 className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-            Share
-          </Button>
-        </div>
+        {/* Enhanced Like/Share Component */}
+        <EnhancedLikeShare
+          post={post}
+          currentUser={currentUser}
+          onLike={handleLike}
+          onShare={() => onShare(post._id)}
+          onComment={() => setShowComments(!showComments)}
+          onBookmark={handleBookmark}
+        />
 
-        {/* Comments Section */}
+        {/* Enhanced Comments Section */}
         {showComments && (
-          <div className="border-t border-border/50 pt-4 animate-in slide-in-from-top-2 duration-200">
-            {/* Add Comment */}
-            <form onSubmit={handleAddComment} className="flex items-center gap-3 mb-4">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={currentUser?.avatar} />
-                <AvatarFallback>{getInitials(currentUser?.name || 'U')}</AvatarFallback>
-              </Avatar>
-              <Input
-                placeholder="Write a comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="flex-1"
-              />
-              <Button 
-                type="submit" 
-                size="icon" 
-                disabled={!newComment.trim()}
-                className="shrink-0"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </form>
-
-            {/* Comments List */}
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {comments.slice(0, 3).map((comment) => (
-                <div key={comment._id} className="flex gap-2">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={comment.user?.avatar} />
-                    <AvatarFallback>{getInitials(comment.user?.name || 'U')}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 bg-secondary/50 hover:bg-secondary/80 rounded-xl p-3 transition-colors">
-                    <p className="font-semibold text-sm">{comment.user?.name}</p>
-                    <p className="text-sm">{comment.text}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatDate(comment.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {comments.length > 3 && (
-                <Button variant="link" size="sm">
-                  View all {comments.length} comments
-                </Button>
-              )}
-            </div>
-          </div>
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-t border-border/50 pt-4"
+          >
+            <EnhancedComments
+              postId={post._id}
+              currentUser={currentUser}
+            />
+          </motion.div>
         )}
       </CardContent>
     </Card>

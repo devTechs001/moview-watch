@@ -23,17 +23,48 @@ const SubscriptionPage = () => {
 
   const fetchPlans = async () => {
     try {
-      // Try new payment endpoint first
-      const response = await axios.get('/payment/plans')
+      // Try payments endpoint first
+      const response = await axios.get('/payments/plans')
       setPlans(response.data.plans)
     } catch (error) {
-      // Fallback to old endpoint
+      // Fallback to subscription endpoint
       try {
         const response = await axios.get('/subscriptions/plans')
         setPlans(response.data.plans)
       } catch (err) {
         console.error(err)
-        toast.error('Failed to load plans')
+        // Use fallback plans if API fails
+        setPlans([
+          {
+            id: 'free',
+            name: 'Free',
+            price: 0,
+            description: 'Basic features',
+            features: ['SD Quality', '1 Device', 'Limited Content', 'With Ads']
+          },
+          {
+            id: 'basic',
+            name: 'Basic',
+            price: 9.99,
+            description: 'HD streaming',
+            features: ['HD Quality', '1 Device', 'Limited Content', 'Ads Supported']
+          },
+          {
+            id: 'premium',
+            name: 'Premium',
+            price: 14.99,
+            description: 'Full HD streaming',
+            features: ['Full HD Quality', '2 Devices', 'Full Content Library', 'Ad-Free', 'Download Content']
+          },
+          {
+            id: 'vip',
+            name: 'VIP',
+            price: 19.99,
+            description: 'Ultimate experience',
+            features: ['4K Ultra HD', '4 Devices', 'Full Content Library', 'Ad-Free', 'Download Content', 'Early Access', 'Priority Support']
+          }
+        ])
+        toast.error('Failed to load plans from server, using default plans')
       }
     }
   }

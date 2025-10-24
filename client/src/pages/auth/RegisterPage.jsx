@@ -5,6 +5,7 @@ import { Film, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useAuthStore } from '../../store/authStore'
+import toast from 'react-hot-toast'
 
 const RegisterPage = () => {
   const navigate = useNavigate()
@@ -46,6 +47,60 @@ const RegisterPage = () => {
     }
     
     setLoading(false)
+  }
+
+  const handleGoogleSignup = async () => {
+    try {
+      setLoading(true)
+      // Open Google OAuth popup
+      const popup = window.open(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/google`,
+        'google-signup',
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+      )
+      
+      // Listen for popup close
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed)
+          setLoading(false)
+          // Check if signup was successful by checking auth store
+          if (localStorage.getItem('token')) {
+            navigate('/home')
+          }
+        }
+      }, 1000)
+    } catch (error) {
+      toast.error('Google signup failed')
+      setLoading(false)
+    }
+  }
+
+  const handleFacebookSignup = async () => {
+    try {
+      setLoading(true)
+      // Open Facebook OAuth popup
+      const popup = window.open(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/facebook`,
+        'facebook-signup',
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+      )
+      
+      // Listen for popup close
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed)
+          setLoading(false)
+          // Check if signup was successful by checking auth store
+          if (localStorage.getItem('token')) {
+            navigate('/home')
+          }
+        }
+      }, 1000)
+    } catch (error) {
+      toast.error('Facebook signup failed')
+      setLoading(false)
+    }
   }
 
   return (
@@ -195,11 +250,21 @@ const RegisterPage = () => {
 
           {/* Social Login */}
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-              Google
+            <Button 
+              variant="outline" 
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={handleGoogleSignup}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Google'}
             </Button>
-            <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-              Facebook
+            <Button 
+              variant="outline" 
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={handleFacebookSignup}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Facebook'}
             </Button>
           </div>
 

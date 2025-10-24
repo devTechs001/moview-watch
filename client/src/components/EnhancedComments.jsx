@@ -1,19 +1,20 @@
-import { useState } from 'react'
-import { Heart, MessageCircle, Send, Smile, MoreVertical, Reply, ThumbsUp, Laugh, Angry, Sad, X } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Heart, MessageCircle, Send, Smile, MoreVertical, Reply, ThumbsUp, Laugh, Angry, Frown, X, ChevronDown, ChevronUp, Filter, SortAsc, SortDesc } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/Avatar'
 import { Button } from './ui/Button'
 import { Input } from './ui/Input'
 import axios from '../lib/axios'
 import toast from 'react-hot-toast'
-import { getInitials, formatDate } from '../lib/utils'
+import { getInitials, formatDate, SOCKET_URL } from '../lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import { io } from 'socket.io-client'
 
 const REACTIONS = [
   { emoji: '❤️', name: 'love', icon: Heart, color: 'text-red-500' },
   { emoji: '👍', name: 'like', icon: ThumbsUp, color: 'text-blue-500' },
   { emoji: '😂', name: 'laugh', icon: Laugh, color: 'text-yellow-500' },
   { emoji: '😮', name: 'wow', icon: null, color: 'text-purple-500' },
-  { emoji: '😢', name: 'sad', icon: Sad, color: 'text-gray-500' },
+  { emoji: '😢', name: 'sad', icon: Frown, color: 'text-gray-500' },
   { emoji: '😡', name: 'angry', icon: Angry, color: 'text-orange-500' },
 ]
 
@@ -235,6 +236,55 @@ const EnhancedComments = ({ postId, currentUser }) => {
   const [loading, setLoading] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [sortBy, setSortBy] = useState('recent') // recent, popular, oldest
+  const [socket, setSocket] = useState(null)
+  const [showAllComments, setShowAllComments] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const commentsEndRef = useRef(null)
+  const commentsContainerRef = useRef(null)
+
+  // Initialize socket connection
+  useEffect(() => {
+    const newSocket = io(SOCKET_URL)
+    setSocket(newSocket)
+
+    // Listen for real-time comment updates
+    newSocket.on('new_comment', (data) => {
+      if (data.postId === postId) {
+        setComments(prev => [data.comment, ...prev])
+        scrollToBottom()
+      }
+    })
+
+    newSocket.on('comment_reacted', (data) => {
+      if (data.postId === postId) {
+        setComments(prev => prev.map(c => 
+          c._id === data.commentId 
+            ? { ...c, reactions: data.reactions }
+            : c
+        ))
+      }
+    })
+
+    newSocket.on('comment_deleted', (data) => {
+      if (data.postId === postId) {
+        setComments(prev => prev.filter(c => c._id !== data.commentId))
+      }
+    })
+
+    return () => newSocket.disconnect()
+  }, [postId])
+
+  // Auto-scroll to bottom when new comments are added
+  const scrollToBottom = () => {
+    commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // Scroll to bottom when comments change
+  useEffect(() => {
+    if (comments.length > 0) {
+      scrollToBottom()
+    }
+  }, [comments.length])
 
   const fetchComments = async () => {
     try {
@@ -331,19 +381,41 @@ const EnhancedComments = ({ postId, currentUser }) => {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-lg flex items-center gap-2">
-          <MessageCircle className="w-5 h-5" />
-          Comments ({comments.length})
-        </h3>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="text-sm border rounded-lg px-3 py-1 bg-background"
-        >
-          <option value="recent">Most Recent</option>
-          <option value="popular">Most Popular</option>
-          <option value="oldest">Oldest First</option>
-        </select>
+        <div className="flex items-center gap-3">
+          <h3 className="font-bold text-lg flex items-center gap-2">
+            <MessageCircle className="w-5 h-5" />
+            Comments ({comments.length})
+          </h3>
+          {comments.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="text-sm border rounded-lg px-3 py-1 bg-background"
+          >
+            <option value="recent">Most Recent</option>
+            <option value="popular">Most Popular</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAllComments(!showAllComments)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Filter className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Add Comment */}
@@ -406,25 +478,61 @@ const EnhancedComments = ({ postId, currentUser }) => {
       </div>
 
       {/* Comments List */}
-      <div className="space-y-2">
-        {sortedComments.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No comments yet. Be the first to comment!</p>
+      {!isCollapsed && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="space-y-2"
+        >
+          <div 
+            ref={commentsContainerRef}
+            className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40 transition-colors"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {sortedComments.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No comments yet. Be the first to comment!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sortedComments.map((comment, index) => (
+                  <motion.div
+                    key={comment._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Comment
+                      comment={comment}
+                      currentUser={currentUser}
+                      onReply={handleReply}
+                      onReact={handleReact}
+                      onDelete={handleDeleteComment}
+                    />
+                  </motion.div>
+                ))}
+                <div ref={commentsEndRef} />
+              </div>
+            )}
           </div>
-        ) : (
-          sortedComments.map((comment) => (
-            <Comment
-              key={comment._id}
-              comment={comment}
-              currentUser={currentUser}
-              onReply={handleReply}
-              onReact={handleReact}
-              onDelete={handleDeleteComment}
-            />
-          ))
-        )}
-      </div>
+          
+          {/* Load More Comments */}
+          {comments.length > 5 && !showAllComments && (
+            <div className="text-center pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAllComments(true)}
+                className="hover:bg-primary hover:text-primary-foreground"
+              >
+                Show All Comments ({comments.length})
+              </Button>
+            </div>
+          )}
+        </motion.div>
+      )}
     </div>
   )
 }

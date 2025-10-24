@@ -96,7 +96,18 @@ const LandingPage = () => {
                   Start Watching Now
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10 text-lg px-8">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="text-white border-white hover:bg-white/10 text-lg px-8"
+                onClick={() => {
+                  // Scroll to features section
+                  const featuresSection = document.querySelector('.features-section')
+                  if (featuresSection) {
+                    featuresSection.scrollIntoView({ behavior: 'smooth' })
+                  }
+                }}
+              >
                 Learn More
               </Button>
             </motion.div>
@@ -107,7 +118,7 @@ const LandingPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto features-section"
           >
             {features.map((feature, index) => (
               <motion.div

@@ -23,7 +23,7 @@ const SubscriptionCheckout = () => {
 
   const fetchPlans = async () => {
     try {
-      const response = await axios.get('/payment/plans')
+      const response = await axios.get('/payments/plans')
       setPlans(response.data.plans)
       
       if (planId) {
@@ -31,7 +31,37 @@ const SubscriptionCheckout = () => {
         setSelectedPlan(plan)
       }
     } catch (error) {
-      toast.error('Failed to load plans')
+      // Fallback plans if API fails
+      const fallbackPlans = [
+        {
+          id: 'basic',
+          name: 'Basic',
+          price: 9.99,
+          description: 'HD streaming',
+          features: ['HD Quality', '1 Device', 'Limited Content', 'Ads Supported']
+        },
+        {
+          id: 'premium',
+          name: 'Premium',
+          price: 14.99,
+          description: 'Full HD streaming',
+          features: ['Full HD Quality', '2 Devices', 'Full Content Library', 'Ad-Free', 'Download Content']
+        },
+        {
+          id: 'vip',
+          name: 'VIP',
+          price: 19.99,
+          description: 'Ultimate experience',
+          features: ['4K Ultra HD', '4 Devices', 'Full Content Library', 'Ad-Free', 'Download Content', 'Early Access', 'Priority Support']
+        }
+      ]
+      setPlans(fallbackPlans)
+      
+      if (planId) {
+        const plan = fallbackPlans.find(p => p.id === planId)
+        setSelectedPlan(plan)
+      }
+      toast.error('Failed to load plans from server, using default plans')
     } finally {
       setLoading(false)
     }
@@ -263,7 +293,7 @@ const MpesaPaymentForm = ({ plan }) => {
     setProcessing(true)
 
     try {
-      const response = await axios.post('/payment/mpesa/initiate', {
+      const response = await axios.post('/payments/mpesa/initiate', {
         phoneNumber,
         amount: plan.price,
         planId: plan.id,
@@ -288,7 +318,7 @@ const MpesaPaymentForm = ({ plan }) => {
       attempts++
 
       try {
-        const response = await axios.get(`/payment/mpesa/status/${requestId}`)
+        const response = await axios.get(`/payments/mpesa/status/${requestId}`)
 
         if (response.data.status === 'completed') {
           clearInterval(interval)
@@ -376,7 +406,7 @@ const FlutterwavePaymentForm = ({ plan }) => {
     setProcessing(true)
 
     try {
-      const response = await axios.post('/payment/flutterwave/initiate', {
+      const response = await axios.post('/payments/flutterwave/initiate', {
         amount: plan.price,
         planId: plan.id,
       })
@@ -443,7 +473,7 @@ const PaystackPaymentForm = ({ plan }) => {
     setProcessing(true)
 
     try {
-      const response = await axios.post('/payment/paystack/initiate', {
+      const response = await axios.post('/payments/paystack/initiate', {
         email,
         amount: plan.price,
         planId: plan.id,
@@ -518,7 +548,7 @@ const PayPalPaymentForm = ({ plan }) => {
     setProcessing(true)
 
     try {
-      const response = await axios.post('/payment/paypal/create-order', {
+      const response = await axios.post('/payments/paypal/create-order', {
         amount: plan.price,
         planId: plan.id,
       })

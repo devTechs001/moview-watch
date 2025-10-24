@@ -5,6 +5,7 @@ import { Film, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useAuthStore } from '../../store/authStore'
+import toast from 'react-hot-toast'
 
 const LoginPage = () => {
   const navigate = useNavigate()
@@ -34,6 +35,60 @@ const LoginPage = () => {
     }
     
     setLoading(false)
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true)
+      // Open Google OAuth popup
+      const popup = window.open(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/google`,
+        'google-login',
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+      )
+      
+      // Listen for popup close
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed)
+          setLoading(false)
+          // Check if login was successful by checking auth store
+          if (localStorage.getItem('token')) {
+            navigate('/home')
+          }
+        }
+      }, 1000)
+    } catch (error) {
+      toast.error('Google login failed')
+      setLoading(false)
+    }
+  }
+
+  const handleFacebookLogin = async () => {
+    try {
+      setLoading(true)
+      // Open Facebook OAuth popup
+      const popup = window.open(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/facebook`,
+        'facebook-login',
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+      )
+      
+      // Listen for popup close
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed)
+          setLoading(false)
+          // Check if login was successful by checking auth store
+          if (localStorage.getItem('token')) {
+            navigate('/home')
+          }
+        }
+      }, 1000)
+    } catch (error) {
+      toast.error('Facebook login failed')
+      setLoading(false)
+    }
   }
 
   return (
@@ -138,11 +193,21 @@ const LoginPage = () => {
 
           {/* Social Login */}
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-              Google
+            <Button 
+              variant="outline" 
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Google'}
             </Button>
-            <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-              Facebook
+            <Button 
+              variant="outline" 
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={handleFacebookLogin}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Facebook'}
             </Button>
           </div>
 
