@@ -1,4 +1,4 @@
-# Netlify Configuration for Frontend
+# Netlify Configuration for CinemaFlix Frontend
 [build]
   base = "client"
   command = "npm run build"
@@ -6,6 +6,9 @@
   
 [build.environment]
   NODE_VERSION = "18"
+  VITE_API_URL = "https://cinemaflx-server.onrender.com/api"
+  VITE_SOCKET_URL = "https://cinemaflx-server.onrender.com"
+  VITE_CLIENT_URL = "https://cinemaflx.netlify.app"
 
 # Explicitly define plugins (prevents UI-added incompatible plugins)
 [[plugins]]
@@ -15,13 +18,37 @@
     # Optional: Configure Lighthouse settings
     # thresholds.performance = 0.9
 
+# SPA routing support
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Environment variables (set in Netlify dashboard)
-# VITE_API_URL = your_backend_url/api
-# VITE_SOCKET_URL = your_backend_url
-# VITE_TMDB_API_KEY = your_tmdb_key
-# VITE_STRIPE_PUBLISHABLE_KEY = your_stripe_key
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# PWA support
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/service-worker.js"
+  [headers.values]
+    Content-Type = "application/javascript"
+    Cache-Control = "public, max-age=0, must-revalidate"

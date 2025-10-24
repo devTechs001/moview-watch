@@ -3,7 +3,7 @@ import { Video as VideoIcon, VideoOff, Mic, MicOff, PhoneOff, Maximize, Minimize
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/Avatar'
-import { getInitials } from '../lib/utils'
+import { getInitials, SOCKET_URL } from '../lib/utils'
 import { useAuthStore } from '../store/authStore'
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
@@ -43,7 +43,7 @@ const VideoCall = ({ targetUser, onEnd, callType = 'video' }) => {
       }
 
       // Setup Socket.io
-      const socket = io('http://localhost:5000')
+      const socket = io(SOCKET_URL)
       socketRef.current = socket
 
       // Setup WebRTC

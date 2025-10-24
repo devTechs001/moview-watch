@@ -5,8 +5,45 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000'
+// Environment configuration for different deployments
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  // Auto-detect deployment environment
+  if (window.location.hostname.includes('netlify.app')) {
+    return 'https://cinemaflx-server.onrender.com/api'
+  }
+  
+  if (window.location.hostname.includes('github.io')) {
+    return 'https://cinemaflx-server.onrender.com/api'
+  }
+  
+  // Local development
+  return 'http://localhost:5000/api'
+}
+
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL
+  }
+  
+  // Auto-detect deployment environment
+  if (window.location.hostname.includes('netlify.app')) {
+    return 'https://cinemaflx-server.onrender.com'
+  }
+  
+  if (window.location.hostname.includes('github.io')) {
+    return 'https://cinemaflx-server.onrender.com'
+  }
+  
+  // Local development
+  return 'http://localhost:5000'
+}
+
+export const API_URL = getApiUrl()
+export const SOCKET_URL = getSocketUrl()
 
 // Format duration in minutes to hours and minutes
 export function formatDuration(minutes) {

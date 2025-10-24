@@ -1,13 +1,16 @@
 {
   "name": "CinemaFlix - Movie Streaming Platform",
   "short_name": "CinemaFlix",
-  "description": "Stream movies, connect with friends, and discover new content",
+  "description": "Stream movies, connect with friends, and discover new content. The ultimate movie streaming experience with social features.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
+  "background_color": "#0a0a0a",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
-  "categories": ["entertainment", "video", "social"],
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["entertainment", "video", "social", "lifestyle"],
   "icons": [
     {
       "src": "/favicon.svg",
@@ -31,6 +34,16 @@
       "src": "/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
+    },
+    {
+      "src": "/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
     }
   ],
   "screenshots": [
@@ -38,34 +51,89 @@
       "src": "/screenshots/desktop.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "CinemaFlix Desktop Experience"
     },
     {
       "src": "/screenshots/mobile.png",
       "sizes": "750x1334",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "CinemaFlix Mobile Experience"
     }
   ],
   "shortcuts": [
     {
       "name": "Search Movies",
       "short_name": "Search",
-      "description": "Search for movies",
-      "url": "/search"
+      "description": "Search for movies and discover new content",
+      "url": "/search",
+      "icons": [
+        {
+          "src": "/icons/search-96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "My Wishlist",
       "short_name": "Wishlist",
-      "description": "View your wishlist",
-      "url": "/wishlist"
+      "description": "View your saved movies",
+      "url": "/wishlist",
+      "icons": [
+        {
+          "src": "/icons/wishlist-96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Social Feed",
       "short_name": "Social",
-      "description": "View social feed",
-      "url": "/social"
+      "description": "Connect with friends and share content",
+      "url": "/social",
+      "icons": [
+        {
+          "src": "/icons/social-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Watch Later",
+      "short_name": "Watch Later",
+      "description": "Movies you want to watch later",
+      "url": "/watch-later",
+      "icons": [
+        {
+          "src": "/icons/watch-later-96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ],
-  "prefer_related_applications": false
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "protocol_handlers": [
+    {
+      "protocol": "web+cinemaflix",
+      "url": "/movie?id=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/upload",
+      "accept": {
+        "video/*": [".mp4", ".webm", ".mov"],
+        "image/*": [".jpg", ".jpeg", ".png", ".gif"]
+      }
+    }
+  ]
 }

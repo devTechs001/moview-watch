@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { TrendingUp, Film, Star, Play, Info } from 'lucide-react'
+import { TrendingUp, Film, Star, Play, Info, Clock } from 'lucide-react'
 import Layout from '../components/Layout'
 import MovieCard from '../components/MovieCard'
 import { Button } from '../components/ui/Button'
 import axios from '../lib/axios'
 import toast from 'react-hot-toast'
+import { formatNumber } from '../lib/utils'
 
 const HomePage = () => {
   const [movies, setMovies] = useState([])
@@ -91,42 +92,76 @@ const HomePage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative h-[500px] rounded-2xl overflow-hidden mb-12"
+          className="relative h-[600px] md:h-[700px] rounded-2xl overflow-hidden mb-12 group"
         >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/40 z-10" />
           <img
-            src="https://picsum.photos/seed/hero/1920/500"
+            src={featuredMovie?.backdrop || "https://picsum.photos/seed/hero/1920/800"}
             alt="Featured"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-            <div className="absolute bottom-0 left-0 p-12">
-              <div className="flex items-center gap-2 mb-4">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-20">
+            <div className="absolute bottom-0 left-0 p-6 md:p-12 max-w-4xl">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-2 mb-4"
+              >
                 <TrendingUp className="w-6 h-6 text-yellow-400" />
-                <span className="text-yellow-400 font-semibold">Trending Now</span>
-              </div>
-              <h1 className="text-5xl font-bold text-white mb-4">
-                {featuredMovie?.title || 'Featured Movie Title'}
-              </h1>
-              <div className="flex items-center gap-4 mb-6 text-white/90">
-                <div className="flex items-center gap-1">
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                  <span>{featuredMovie?.rating || '8.5'}</span>
+                <span className="text-yellow-400 font-semibold text-sm md:text-base">Trending Now</span>
+                <div className="flex items-center gap-1 ml-4">
+                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                  <span className="text-yellow-400 font-semibold">{featuredMovie?.rating || '8.5'}</span>
                 </div>
-                <span>•</span>
+              </motion.div>
+              
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight"
+              >
+                {featuredMovie?.title || 'Featured Movie Title'}
+              </motion.h1>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex flex-wrap items-center gap-2 md:gap-4 mb-6 text-white/90 text-sm md:text-base"
+              >
                 <span>{featuredMovie?.year || '2024'}</span>
-                <span>•</span>
+                <span className="hidden md:inline">•</span>
                 <span>{featuredMovie?.genre?.join(', ') || 'Action, Thriller'}</span>
-                <span>•</span>
+                <span className="hidden md:inline">•</span>
                 <span>{featuredMovie?.duration || '2h 15m'}</span>
-              </div>
-              <p className="text-white/90 text-lg max-w-2xl mb-8">
+                <span className="hidden md:inline">•</span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  {featuredMovie?.views ? formatNumber(featuredMovie.views) + ' views' : '1.2M views'}
+                </span>
+              </motion.div>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-white/90 text-base md:text-lg max-w-2xl mb-8 leading-relaxed"
+              >
                 {featuredMovie?.description || 'An epic journey through time and space that will keep you on the edge of your seat. Experience the thrill like never before.'}
-              </p>
-              <div className="flex gap-4">
+              </motion.p>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="flex flex-col sm:flex-row gap-4"
+              >
                 <Button 
                   size="lg"
                   onClick={() => handleWatchNow(featuredMovie?._id)}
-                  className="px-8 shadow-lg hover:shadow-xl transition-all"
+                  className="px-8 py-3 shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90 text-white font-semibold"
                 >
                   <Play className="w-5 h-5 mr-2 fill-white" />
                   Watch Now
@@ -135,39 +170,50 @@ const HomePage = () => {
                   size="lg"
                   variant="outline"
                   onClick={() => handleMoreInfo(featuredMovie?._id)}
-                  className="px-8 bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 hover:text-white"
+                  className="px-8 py-3 bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 hover:text-white font-semibold"
                 >
                   <Info className="w-5 h-5 mr-2" />
                   More Info
                 </Button>
-              </div>
+              </motion.div>
             </div>
           </div>
         </motion.div>
 
         {/* Categories */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Browse by Genre</h2>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="mb-12"
+        >
+          <h2 className="text-2xl font-bold mb-6">Browse by Genre</h2>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map((category) => (
-              <Button
+            {categories.map((category, index) => (
+              <motion.div
                 key={category}
-                onClick={() => {
-                  setSelectedCategory(category)
-                  toast.success(`Showing ${category === 'All' ? 'all' : category} movies`)
-                }}
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                className={`whitespace-nowrap ${
-                  selectedCategory === category
-                    ? 'shadow-md'
-                    : ''
-                }`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8 + index * 0.1 }}
               >
-                {category}
-              </Button>
+                <Button
+                  onClick={() => {
+                    setSelectedCategory(category)
+                    toast.success(`Showing ${category === 'All' ? 'all' : category} movies`)
+                  }}
+                  variant={selectedCategory === category ? 'default' : 'outline'}
+                  className={`whitespace-nowrap transition-all duration-300 ${
+                    selectedCategory === category
+                      ? 'shadow-lg scale-105'
+                      : 'hover:scale-105 hover:shadow-md'
+                  }`}
+                >
+                  {category}
+                </Button>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Movies Grid */}
         <div>
