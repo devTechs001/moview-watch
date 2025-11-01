@@ -1,6 +1,7 @@
 import Post from '../models/Post.js'
 import Comment from '../models/Comment.js'
 import SocialActivity from '../models/SocialActivity.js'
+import { emitSocketEvent } from '../utils/socket.js'
 
 // @desc    Create a new post
 // @route   POST /api/posts
@@ -9,11 +10,18 @@ export const createPost = async (req, res) => {
   try {
     const { content, type, media, sharedMovie, rating, visibility } = req.body
 
+    // Validate: must have content, media, or sharedMovie
+    if (!content && (!media || media.length === 0) && !sharedMovie) {
+      return res.status(400).json({ 
+        message: 'Post must have content, media, or a shared movie' 
+      })
+    }
+
     const post = await Post.create({
       user: req.user._id,
-      content,
-      type,
-      media,
+      content: content || '',
+      type: type || 'text',
+      media: media || [],
       sharedMovie,
       rating,
       visibility: visibility || 'public',
@@ -35,15 +43,12 @@ export const createPost = async (req, res) => {
       console.warn('Social activity creation failed (non-critical):', activityError.message)
     }
 
-    // Emit Socket.io event (optional)
-    try {
-      const io = req.app.get('io')
-      if (io) {
-        io.emit('new_post', populatedPost)
-      }
-    } catch (socketError) {
-      console.warn('Socket.io emit failed (non-critical):', socketError.message)
-    }
+    // Emit Socket.io event
+    emitSocketEvent(req, 'new_post', {
+      post: populatedPost,
+      userId: req.user._id,
+      timestamp: new Date(),
+    })
 
     res.status(201).json({ post: populatedPost })
   } catch (error) {
@@ -203,8 +208,7 @@ export const likePost = async (req, res) => {
     await post.save()
 
     // Emit Socket.io event
-    const io = req.app.get('io')
-    io.emit('post_liked', {
+    emitSocketEvent(req, 'post_liked', {
       postId: post._id,
       userId: req.user._id,
       liked: !alreadyLiked,
@@ -265,8 +269,7 @@ export const addComment = async (req, res) => {
     }
 
     // Emit Socket.io event
-    const io = req.app.get('io')
-    io.emit('post_commented', {
+    emitSocketEvent(req, 'post_commented', {
       postId: post._id,
       comment,
       commentCount: post.comments.length,

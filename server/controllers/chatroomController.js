@@ -73,8 +73,11 @@ export const createChatroom = async (req, res) => {
     await chatroom.populate('creator', 'name avatar')
 
     // Emit socket event
-    const io = req.app.get('io')
-    io.emit('chatroom_created', chatroom)
+    emitSocketEvent(req, 'chatroom_created', {
+      chatroom,
+      creator: req.user._id,
+      timestamp: new Date(),
+    })
 
     res.status(201).json({ chatroom })
   } catch (error) {

@@ -132,6 +132,34 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Subscription',
     },
+    profileViews: [{
+      viewer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      viewedAt: {
+        type: Date,
+        default: Date.now,
+      },
+      anonymous: {
+        type: Boolean,
+        default: false,
+      }
+    }],
+    profileViewCount: {
+      type: Number,
+      default: 0,
+    },
+    onlineStatus: {
+      isOnline: {
+        type: Boolean,
+        default: false,
+      },
+      lastSeen: {
+        type: Date,
+        default: Date.now,
+      },
+    },
   },
   {
     timestamps: true,

@@ -10,6 +10,8 @@ import AdminRoute from './components/AdminRoute'
 import ThemeProvider from './components/ThemeProvider'
 import PWAInstallPrompt from './components/PWAInstallPrompt'
 import PWAUpdateNotification from './components/PWAUpdateNotification'
+import AIChatWidget from './components/AIChatWidget'
+import PWAInstallButton from './components/PWAInstallButton'
 
 // Pages
 import LandingPage from './pages/LandingPage'
@@ -39,6 +41,10 @@ import PaymentPage from './pages/PaymentPage'
 import InvitePage from './pages/InvitePage'
 import FriendsPage from './pages/FriendsPage'
 import SubscriptionCheckout from './pages/SubscriptionCheckout'
+import ShortsPage from './pages/ShortsPage'
+import MusicPage from './pages/MusicPage'
+import AnimationsPage from './pages/AnimationsPage'
+import DownloadManagerPage from './pages/DownloadManagerPage'
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -49,6 +55,8 @@ import AISecurityDashboard from './pages/admin/AISecurityDashboard'
 import TMDBImporter from './pages/admin/TMDBImporter'
 import AdminAnalytics from './pages/admin/AdminAnalytics'
 import AdminSubscriptions from './pages/admin/AdminSubscriptions'
+import ContentManagement from './pages/admin/ContentManagement'
+import AIControlPanel from './pages/admin/AIControlPanel'
 import EnhancedThemeSelector from './pages/admin/EnhancedThemeSelector'
 import AdminReports from './pages/admin/AdminReports'
 import AdminActivityLog from './pages/admin/AdminActivityLog'
@@ -241,6 +249,16 @@ function App() {
             <AISecurityDashboard />
           </AdminRoute>
         } />
+        <Route path="/admin/content" element={
+          <AdminRoute>
+            <ContentManagement />
+          </AdminRoute>
+        } />
+        <Route path="/admin/ai-control" element={
+          <AdminRoute>
+            <AIControlPanel />
+          </AdminRoute>
+        } />
         <Route path="/admin/import-movies" element={
           <AdminRoute>
             <TMDBImporter />
@@ -286,8 +304,39 @@ function App() {
           </ProtectedRoute>
         } />
         
+        {/* New Content Library Routes */}
+        <Route path="/shorts" element={
+          <ProtectedRoute>
+            <ShortsPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/music" element={
+          <ProtectedRoute>
+            <MusicPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/animations" element={
+          <ProtectedRoute>
+            <AnimationsPage />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/downloads" element={
+          <ProtectedRoute>
+            <DownloadManagerPage />
+          </ProtectedRoute>
+        } />
+        
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      
+      {/* AI Chat Widget - Shows for all authenticated users if enabled by admin */}
+      {isAuthenticated && <AIChatWidget />}
+      
+      {/* PWA Install Prompt - Shows on first visit */}
+      <PWAInstallButton />
     </ThemeProvider>
   )
 }

@@ -76,6 +76,9 @@ const EnhancedLikeShare = ({ post, currentUser, onLike, onShare, onComment, onBo
     setShareCount(post.shareCount || post.shares?.length || 0)
     setCommentCount(post.commentCount || post.comments?.length || 0)
     setViewCount(post.viewCount || post.views?.length || 0)
+    
+    // Track view on mount
+    handleView()
   }, [post, currentUser])
 
   const triggerLikeAnimation = () => {
@@ -318,10 +321,6 @@ const EnhancedLikeShare = ({ post, currentUser, onLike, onShare, onComment, onBo
         </div>
       </div>
 
-      {/* View Tracking */}
-      {useEffect(() => {
-        handleView()
-      }, [])}
     </div>
   )
 }

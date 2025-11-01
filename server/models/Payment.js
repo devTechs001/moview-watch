@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose'
 
 const paymentSchema = new mongoose.Schema({
   user: {
@@ -48,8 +48,9 @@ const paymentSchema = new mongoose.Schema({
 });
 
 // Index for faster queries
-paymentSchema.index({ user: 1, createdAt: -1 });
-paymentSchema.index({ status: 1 });
-paymentSchema.index({ gateway: 1 });
+paymentSchema.index({ user: 1, createdAt: -1 })
+paymentSchema.index({ status: 1 })
+paymentSchema.index({ gateway: 1 })
 
-module.exports = mongoose.model('Payment', paymentSchema);
+const Payment = mongoose.model('Payment', paymentSchema)
+export default Payment

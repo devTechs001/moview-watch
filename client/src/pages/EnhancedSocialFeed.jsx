@@ -413,7 +413,7 @@ const PostCard = ({ post, currentUser, onLike, onShare, onEdit, onDelete, onRepo
             <span className="font-semibold text-foreground">{post.likeCount || post.likes?.length || 0}</span> likes
           </button>
           <button className="hover:underline transition-colors">
-            <span className="font-semibold text-foreground">{post.commentCount || comments.length}</span> comments
+            <span className="font-semibold text-foreground">{post.commentCount || post.comments?.length || 0}</span> comments
           </button>
           <button className="hover:underline transition-colors">
             <span className="font-semibold text-foreground">{post.shareCount || post.shares?.length || 0}</span> shares
@@ -424,10 +424,10 @@ const PostCard = ({ post, currentUser, onLike, onShare, onEdit, onDelete, onRepo
         <EnhancedLikeShare
           post={post}
           currentUser={currentUser}
-          onLike={handleLike}
+          onLike={() => onLike(post._id)}
           onShare={() => onShare(post._id)}
           onComment={() => setShowComments(!showComments)}
-          onBookmark={handleBookmark}
+          onBookmark={() => onBookmark(post._id)}
         />
 
         {/* Enhanced Comments Section */}

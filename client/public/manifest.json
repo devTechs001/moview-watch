@@ -1,16 +1,17 @@
 {
   "name": "CinemaFlix - Movie Streaming Platform",
   "short_name": "CinemaFlix",
-  "description": "Stream movies, connect with friends, and discover new content. The ultimate movie streaming experience with social features.",
+  "description": "Stream movies, connect with friends, and discover new content. The ultimate movie streaming experience with social features and real-time updates.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#3b82f6",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "scope": "/",
   "lang": "en",
   "dir": "ltr",
   "categories": ["entertainment", "video", "social", "lifestyle"],
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "icons": [
     {
       "src": "/favicon.svg",

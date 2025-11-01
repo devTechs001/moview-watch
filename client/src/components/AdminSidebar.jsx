@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Film, Users, Shield, Settings, MessageCircle, Download, BarChart3, FileText, Eye, Crown, Palette } from 'lucide-react'
+import { LayoutDashboard, Film, Users, Shield, Settings, MessageCircle, Download, BarChart3, FileText, Eye, Crown, Palette, TrendingUp, CreditCard, Activity, MessageSquare, Bot, Folder } from 'lucide-react'
 
 const AdminSidebar = () => {
   const location = useLocation()
@@ -13,8 +13,10 @@ const AdminSidebar = () => {
     { name: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
     { name: 'Movies', icon: Film, path: '/admin/movies' },
     { name: 'Import Movies', icon: Download, path: '/admin/import-movies' },
+    { name: 'Content Management', icon: Folder, path: '/admin/content' },
     { name: 'Users', icon: Users, path: '/admin/users' },
     { name: 'Subscriptions', icon: Crown, path: '/admin/subscriptions' },
+    { name: 'AI Control Panel', icon: Bot, path: '/admin/ai-control' },
     { name: 'AI Security', icon: Shield, path: '/admin/security' },
     { name: 'Comments', icon: MessageCircle, path: '/admin/comments' },
     { name: 'Reports', icon: FileText, path: '/admin/reports' },

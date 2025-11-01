@@ -62,7 +62,23 @@ const movieSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    likedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     views: {
+      type: Number,
+      default: 0,
+    },
+    comments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment',
+      },
+    ],
+    commentCount: {
       type: Number,
       default: 0,
     },
@@ -74,6 +90,16 @@ const movieSchema = new mongoose.Schema(
     featured: {
       type: Boolean,
       default: false,
+    },
+    source: {
+      type: String,
+      enum: ['manual', 'tmdb', 'omdb', 'imdb', 'trakt', 'tvmaze'],
+      default: 'manual',
+    },
+    externalId: {
+      tmdb: String,
+      imdb: String,
+      omdb: String,
     },
     addedBy: {
       type: mongoose.Schema.Types.ObjectId,

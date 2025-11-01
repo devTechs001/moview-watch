@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, Users, MessageCircle, User, Film, Heart, Settings, Shield, Palette, UserPlus, TrendingUp, MessagesSquare, Bell, Bookmark, Clock, Zap } from 'lucide-react'
+import { Home, Search, Users, MessageCircle, User, Film, Heart, Settings, Shield, Palette, UserPlus, TrendingUp, MessagesSquare, Bell, Bookmark, Clock, Zap, Menu, Video, Music, Sparkles, Download } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
@@ -37,7 +37,8 @@ const MobileNav = () => {
   const mainNavItems = [
     { name: 'Home', icon: Home, path: '/home', color: 'text-blue-500' },
     { name: 'Search', icon: Search, path: '/search', color: 'text-green-500' },
-    { name: 'Movies', icon: Film, path: '/movies', color: 'text-purple-500' },
+    { name: 'Shorts', icon: Video, path: '/shorts', color: 'text-red-500' },
+    { name: 'Music', icon: Music, path: '/music', color: 'text-purple-500' },
     { name: 'Social', icon: Users, path: '/social', color: 'text-pink-500', badge: notifications },
   ]
 

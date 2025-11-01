@@ -9,10 +9,12 @@ import { Server } from 'socket.io'
 import connectDB from './config/db.js'
 import errorHandler from './middleware/errorHandler.js'
 import { activityLogger, breachDetector } from './middleware/activityMonitor.js'
+import aiMonitorMiddleware from './middleware/aiMonitoring.js'
 
 // Import routes
 import authRoutes from './routes/authRoutes.js'
 import movieRoutes from './routes/movieRoutes.js'
+import movieImportRoutes from './routes/movieImportRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import commentRoutes from './routes/commentRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
@@ -28,11 +30,23 @@ import notificationRoutes from './routes/notificationRoutes.js'
 import chatRoutes from './routes/chatRoutes.js'
 import inviteLinkRoutes from './routes/inviteLinkRoutes.js'
 import friendRoutes from './routes/friendRoutes.js'
+import profileRoutes from './routes/profileRoutes.js'
+import aiAssistantRoutes from './routes/aiAssistantRoutes.js'
+import downloadRoutes from './routes/downloadRoutes.js'
+import aiRecommendationRoutes from './routes/aiRecommendationRoutes.js'
+import adminRealtimeRoutes from './routes/adminRealtimeRoutes.js'
+import chatroomManagementRoutes from './routes/chatroomManagementRoutes.js'
+import contentLibraryRoutes from './routes/contentLibraryRoutes.js'
 
 // Load env vars
 dotenv.config()
 
 // Debug: Log environment loading
+console.log(' Environment loaded from .env file')
+console.log(' NODE_ENV:', process.env.NODE_ENV)
+console.log(' PORT:', process.env.PORT)
+console.log('  MongoDB URI:', process.env.MONGODB_URI ||process.env.MONGO_URI ? ' Loaded' : ' Missing')
+console.log(' JWT Secret:', process.env.JWT_SECRET ? ' Loaded' : ' Missing')
 console.log('🔧 Environment loaded from .env file')
 console.log('📍 NODE_ENV:', process.env.NODE_ENV)
 console.log('🔌 PORT:', process.env.PORT)
@@ -111,8 +125,12 @@ app.use(morgan('dev'))
 // AI Monitoring Middleware (Optional - can be disabled via env)
 if (process.env.AI_MONITORING_ENABLED !== 'false') {
   console.log('🤖 AI Monitoring: ENABLED')
+  // Activity monitoring
   app.use(activityLogger)
   app.use(breachDetector)
+
+  // AI monitoring (self-learning threat detection)
+  app.use(aiMonitorMiddleware)
 } else {
   console.log('🤖 AI Monitoring: DISABLED')
 }
@@ -125,8 +143,12 @@ app.get('/', (req, res) => {
   res.json({ message: 'CinemaFlix API is running' })
 })
 
+// Rate limiting disabled - can be enabled later
+// app.use('/api/', apiLimiter)
+
 app.use('/api/auth', authRoutes)
 app.use('/api/movies', movieRoutes)
+app.use('/api/movies/import', movieImportRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/comments', commentRoutes)
 app.use('/api/admin', adminRoutes)
@@ -142,6 +164,13 @@ app.use('/api/ai-monitoring', aiMonitoringRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/invite', inviteLinkRoutes)
 app.use('/api/friends', friendRoutes)
+app.use('/api/profile', profileRoutes)
+app.use('/api/ai-assistant', aiAssistantRoutes)
+app.use('/api', downloadRoutes)
+app.use('/api/ai', aiRecommendationRoutes)
+app.use('/api/admin/realtime', adminRealtimeRoutes)
+app.use('/api/chatrooms/manage', chatroomManagementRoutes)
+app.use('/api/library', contentLibraryRoutes)
 
 // Error handler
 app.use(errorHandler)

@@ -8,62 +8,120 @@ const chatroomSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    default: '',
+    trim: true,
   },
   type: {
     type: String,
-    enum: ['private', 'public', 'group'],
+    enum: ['public', 'private', 'direct'],
     default: 'public',
+  },
+  avatar: {
+    type: String,
+    default: '',
   },
   creator: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
   },
-  members: [{
-    user: {
+  members: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      role: {
+        type: String,
+        enum: ['admin', 'moderator', 'member'],
+        default: 'member',
+      },
+      permissions: {
+        canSendMessages: { type: Boolean, default: true },
+        canDeleteMessages: { type: Boolean, default: false },
+        canKickMembers: { type: Boolean, default: false },
+        canBanMembers: { type: Boolean, default: false },
+        canEditRoom: { type: Boolean, default: false },
+        canManageRoles: { type: Boolean, default: false },
+      },
+      joinedAt: {
+        type: Date,
+        default: Date.now,
+      },
+      isMuted: {
+        type: Boolean,
+        default: false,
+      },
+      mutedUntil: Date,
+    },
+  ],
+  moderators: [
+    {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
-    role: {
-      type: String,
-      enum: ['admin', 'moderator', 'member'],
-      default: 'member',
+  ],
+  bannedUsers: [
+    {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      bannedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      reason: String,
+      bannedAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
-    joinedAt: {
-      type: Date,
-      default: Date.now,
+  ],
+  inviteLinks: [
+    {
+      code: {
+        type: String,
+        unique: true,
+      },
+      createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      expiresAt: Date,
+      maxUses: Number,
+      uses: {
+        type: Number,
+        default: 0,
+      },
+      isActive: {
+        type: Boolean,
+        default: true,
+      },
     },
-  }],
-  avatar: {
-    type: String,
-    default: '',
+  ],
+  settings: {
+    allowInvites: { type: Boolean, default: true },
+    requireApproval: { type: Boolean, default: false },
+    maxMembers: { type: Number, default: 100 },
+    allowVoiceCalls: { type: Boolean, default: true },
+    allowVideoCalls: { type: Boolean, default: true },
+    allowFileSharing: { type: Boolean, default: true },
   },
   lastMessage: {
-    text: String,
     sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+    content: String,
     timestamp: Date,
-  },
-  settings: {
-    allowInvites: {
-      type: Boolean,
-      default: true,
-    },
-    requireApproval: {
-      type: Boolean,
-      default: false,
-    },
-    maxMembers: {
-      type: Number,
-      default: 100,
-    },
   },
   isActive: {
     type: Boolean,
     default: true,
+  },
+  messageCount: {
+    type: Number,
+    default: 0,
   },
 }, {
   timestamps: true,

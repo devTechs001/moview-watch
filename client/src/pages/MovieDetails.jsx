@@ -4,24 +4,25 @@ import { motion } from 'framer-motion'
 import { Play, Heart, Share2, Star, Clock, Calendar, ThumbsUp, MessageCircle, Bookmark } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { Button } from '../components/ui/Button'
+import DownloadButton from '../components/DownloadButton'
 import { Card, CardContent } from '../components/ui/Card'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/Avatar'
+import EnhancedComments from '../components/EnhancedComments'
 import axios from '../lib/axios'
 import { formatDuration, formatNumber, getInitials } from '../lib/utils'
+import { useAuthStore } from '../store/authStore'
 
 const MovieDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
   const [movie, setMovie] = useState(null)
-  const [comments, setComments] = useState([])
-  const [newComment, setNewComment] = useState('')
   const [isLiked, setIsLiked] = useState(false)
   const [isInWishlist, setIsInWishlist] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchMovieDetails()
-    fetchComments()
   }, [id])
 
   const fetchMovieDetails = async () => {
@@ -64,40 +65,6 @@ const MovieDetails = () => {
     }
   }
 
-  const fetchComments = () => {
-    // Demo comments
-    setComments([
-      {
-        _id: 1,
-        user: { name: 'John Doe', avatar: '' },
-        text: 'Amazing movie! Highly recommended!',
-        likes: 45,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        _id: 2,
-        user: { name: 'Jane Smith', avatar: '' },
-        text: 'Best movie I\'ve seen this year. The cinematography is absolutely stunning!',
-        likes: 32,
-        createdAt: new Date().toISOString(),
-      },
-    ])
-  }
-
-  const handleAddComment = () => {
-    if (!newComment.trim()) return
-
-    const comment = {
-      _id: Date.now(),
-      user: { name: 'Current User', avatar: '' },
-      text: newComment,
-      likes: 0,
-      createdAt: new Date().toISOString(),
-    }
-
-    setComments([comment, ...comments])
-    setNewComment('')
-  }
 
   if (loading) {
     return (
@@ -195,6 +162,10 @@ const MovieDetails = () => {
                 <Play className="w-5 h-5 fill-white" />
                 Watch Now
               </Button>
+              <DownloadButton 
+                movieId={movie._id}
+                title={movie.title}
+              />
               <Button
                 size="lg"
                 variant="outline"
@@ -247,60 +218,22 @@ const MovieDetails = () => {
           </motion.div>
         </div>
 
-        {/* Comments Section */}
-        <Card className="mt-12 mb-12">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <MessageCircle className="w-6 h-6" />
-              Comments ({comments.length})
-            </h2>
-
-            {/* Add Comment */}
-            <div className="flex gap-4 mb-8">
-              <Avatar>
-                <AvatarFallback>CU</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full min-h-[100px] p-3 rounded-lg border border-input bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                <div className="flex justify-end mt-2">
-                  <Button onClick={handleAddComment} disabled={!newComment.trim()}>
-                    Post Comment
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Comments List */}
-            <div className="space-y-6">
-              {comments.map((comment) => (
-                <div key={comment._id} className="flex gap-4">
-                  <Avatar>
-                    <AvatarImage src={comment.user.avatar} />
-                    <AvatarFallback>{getInitials(comment.user.name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold">{comment.user.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(comment.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-foreground/90 mb-2">{comment.text}</p>
-                    <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
-                      <ThumbsUp className="w-4 h-4" />
-                      <span>{comment.likes}</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Enhanced Comments Section with Real-time Updates */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-12 mb-12"
+        >
+          <Card className="overflow-hidden">
+            <CardContent className="p-6">
+              <EnhancedComments 
+                postId={movie._id} 
+                currentUser={user}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   )

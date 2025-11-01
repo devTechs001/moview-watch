@@ -2,26 +2,113 @@ import User from '../models/User.js'
 import Movie from '../models/Movie.js'
 import Comment from '../models/Comment.js'
 import ActivityLog from '../models/ActivityLog.js'
+import Post from '../models/Post.js'
+import Subscription from '../models/Subscription.js'
+import Payment from '../models/Payment.js'
+import AIMonitoring from '../models/AIMonitoring.js'
+import { emitToRoom } from '../utils/socket.js'
 
 // @desc    Get dashboard stats
 // @route   GET /api/admin/stats
 // @access  Private/Admin
 export const getStats = async (req, res) => {
   try {
+    // Get current counts
     const totalUsers = await User.countDocuments()
     const totalMovies = await Movie.countDocuments()
+    const activeMovies = await Movie.countDocuments({ status: 'active' })
+    const pendingMovies = await Movie.countDocuments({ status: 'pending' })
+    
     const totalViews = await Movie.aggregate([
       { $group: { _id: null, total: { $sum: '$views' } } },
     ])
+    
     const totalComments = await Comment.countDocuments()
+    const totalPosts = await Post.countDocuments()
+    
+    // Get active users (logged in last 24 hours)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const activeUsers = await User.countDocuments({
+      'onlineStatus.lastSeen': { $gte: oneDayAgo }
+    })
+    
+    // Get revenue stats
+    const revenueData = await Payment.aggregate([
+      { $match: { status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ])
+    const totalRevenue = revenueData[0]?.total || 0
+    
+    // Get monthly revenue
+    const thisMonth = new Date()
+    thisMonth.setDate(1)
+    thisMonth.setHours(0, 0, 0, 0)
+    
+    const monthlyRevenue = await Payment.aggregate([
+      { 
+        $match: { 
+          status: 'completed',
+          createdAt: { $gte: thisMonth }
+        } 
+      },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ])
+    
+    // Get growth stats (compare with last month)
+    const lastMonth = new Date(thisMonth)
+    lastMonth.setMonth(lastMonth.getMonth() - 1)
+    
+    const lastMonthUsers = await User.countDocuments({
+      createdAt: { $gte: lastMonth, $lt: thisMonth }
+    })
+    
+    const thisMonthUsers = await User.countDocuments({
+      createdAt: { $gte: thisMonth }
+    })
+    
+    const userGrowth = lastMonthUsers > 0 
+      ? ((thisMonthUsers - lastMonthUsers) / lastMonthUsers * 100).toFixed(1)
+      : 0
+    
+    // Get recent activity
+    const recentMovies = await Movie.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('addedBy', 'name')
+      .select('title views rating status createdAt')
+    
+    const recentUsers = await User.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('name email createdAt isActive')
+    
+    const recentComments = await Comment.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('user', 'name avatar')
+      .populate('movie', 'title')
+      .populate('post', 'content')
 
     res.json({
-      totalUsers,
-      totalMovies,
-      totalViews: totalViews[0]?.total || 0,
-      totalComments,
+      stats: {
+        totalUsers,
+        totalMovies,
+        activeMovies,
+        pendingMovies,
+        totalViews: totalViews[0]?.total || 0,
+        totalComments,
+        totalPosts,
+        activeUsers,
+        totalRevenue,
+        monthlyRevenue: monthlyRevenue[0]?.total || 0,
+        userGrowth: parseFloat(userGrowth),
+      },
+      recentMovies,
+      recentUsers,
+      recentComments,
     })
   } catch (error) {
+    console.error('Get stats error:', error)
     res.status(500).json({ message: error.message })
   }
 }

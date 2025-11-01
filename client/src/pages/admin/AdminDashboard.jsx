@@ -1,32 +1,105 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Film, Users, TrendingUp, DollarSign, Eye, Heart, MessageCircle, Star, BarChart3 } from 'lucide-react'
+import { Film, Users, TrendingUp, DollarSign, Eye, Heart, MessageCircle, Star, BarChart3, RefreshCw } from 'lucide-react'
 import AdminLayout from '../../components/AdminLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
+import axios from '../../lib/axios'
+import toast from 'react-hot-toast'
+import { io } from 'socket.io-client'
+import { SOCKET_URL } from '../../lib/utils'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
-    totalMovies: 1247,
-    totalUsers: 45231,
-    totalRevenue: 892450,
-    totalViews: 3456789,
-    monthlyGrowth: 12.5,
-    activeUsers: 23456,
+    totalMovies: 0,
+    totalUsers: 0,
+    totalRevenue: 0,
+    totalViews: 0,
+    userGrowth: 0,
+    activeUsers: 0,
+    totalComments: 0,
+    totalPosts: 0,
+    activeMovies: 0,
+    pendingMovies: 0,
+    monthlyRevenue: 0,
   })
+  const [recentMovies, setRecentMovies] = useState([])
+  const [recentUsers, setRecentUsers] = useState([])
+  const [recentComments, setRecentComments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [socket, setSocket] = useState(null)
 
-  const recentMovies = [
-    { id: 1, title: 'Action Movie', views: 12453, rating: 8.5, status: 'active' },
-    { id: 2, title: 'Comedy Film', views: 8932, rating: 7.8, status: 'active' },
-    { id: 3, title: 'Drama Series', views: 15234, rating: 9.1, status: 'active' },
-    { id: 4, title: 'Thriller Movie', views: 6543, rating: 8.2, status: 'pending' },
-  ]
+  useEffect(() => {
+    fetchStats()
+    
+    // Setup Socket.IO for real-time updates
+    const newSocket = io(SOCKET_URL)
+    setSocket(newSocket)
 
-  const recentUsers = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', joined: '2 days ago', status: 'active' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', joined: '3 days ago', status: 'active' },
-    { id: 3, name: 'Mike Johnson', email: 'mike@example.com', joined: '5 days ago', status: 'active' },
-  ]
+    // Join admin room
+    newSocket.emit('join-admin', 'admin')
+
+    // Listen for real-time updates
+    newSocket.on('stats_updated', (data) => {
+      setStats(prev => ({ ...prev, ...data }))
+    })
+
+    newSocket.on('new_user_registered', () => {
+      fetchStats() // Refresh stats when new user registers
+    })
+
+    newSocket.on('new_post', () => {
+      fetchStats()
+    })
+
+    newSocket.on('movie_liked', () => {
+      fetchStats()
+    })
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchStats, 30000)
+
+    return () => {
+      newSocket.disconnect()
+      clearInterval(interval)
+    }
+  }, [])
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get('/admin/stats')
+      setStats(response.data.stats)
+      setRecentMovies(response.data.recentMovies || [])
+      setRecentUsers(response.data.recentUsers || [])
+      setRecentComments(response.data.recentComments || [])
+    } catch (error) {
+      console.error('Fetch stats error:', error)
+      toast.error('Failed to load dashboard stats')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatDate = (date) => {
+    const now = new Date()
+    const then = new Date(date)
+    const diff = Math.floor((now - then) / 1000) // seconds
+
+    if (diff < 60) return 'Just now'
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`
+    return `${Math.floor(diff / 86400)} days ago`
+  }
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-screen">
+          <RefreshCw className="w-8 h-8 animate-spin" />
+        </div>
+      </AdminLayout>
+    )
+  }
 
   return (
     <AdminLayout>
@@ -58,10 +131,12 @@ const AdminDashboard = () => {
                 <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
                   <Users className="w-6 h-6 text-purple-500" />
                 </div>
-                <span className="text-sm text-green-500 font-semibold">+{stats.monthlyGrowth}%</span>
+                <span className={`text-sm font-semibold ${stats.userGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {stats.userGrowth >= 0 ? '+' : ''}{stats.userGrowth}%
+                </span>
               </div>
               <div className="text-2xl font-bold mb-1">{stats.totalUsers.toLocaleString()}</div>
-              <p className="text-sm text-muted-foreground">Total Users</p>
+              <p className="text-sm text-muted-foreground">Total Users ({stats.activeUsers} active)</p>
             </CardContent>
           </Card>
 
@@ -103,30 +178,29 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentMovies.map((movie) => (
-                  <div key={movie.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors">
-                    <div className="flex-1">
-                      <h4 className="font-semibold mb-1">{movie.title}</h4>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-4 h-4" />
-                          <span>{movie.views.toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                          <span>{movie.rating}</span>
-                        </div>
-                      </div>
+                {recentMovies.length > 0 ? recentMovies.map((movie) => (
+                  <div key={movie._id} className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold">{movie.title}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {movie.views?.toLocaleString() || 0} views • {formatDate(movie.createdAt)}
+                      </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      movie.status === 'active' 
-                        ? 'bg-green-500/10 text-green-500' 
-                        : 'bg-yellow-500/10 text-yellow-500'
-                    }`}>
-                      {movie.status}
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        <span className="text-sm font-semibold">{movie.rating || 0}</span>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        movie.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'
+                      }`}>
+                        {movie.status}
+                      </span>
+                    </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-center text-muted-foreground py-4">No recent movies</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -141,20 +215,22 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors">
-                    <div className="flex-1">
-                      <h4 className="font-semibold mb-1">{user.name}</h4>
+                {recentUsers.length > 0 ? recentUsers.map((user) => (
+                  <div key={user._id} className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold">{user.name}</h4>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground mb-1">{user.joined}</p>
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-500">
-                        {user.status}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">{formatDate(user.createdAt)}</span>
+                      <span className={`w-2 h-2 rounded-full ${
+                        user.isActive ? 'bg-green-500' : 'bg-gray-500'
+                      }`}></span>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-center text-muted-foreground py-4">No recent users</p>
+                )}
               </div>
             </CardContent>
           </Card>

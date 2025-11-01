@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, Film, Heart, Users, MessageCircle, Settings, User, TrendingUp, Compass, Bookmark, Clock, LayoutDashboard, Shield, Crown, CreditCard, Palette, MessagesSquare, UserPlus } from 'lucide-react'
+import { Home, Search, Film, Heart, Users, MessageCircle, Settings, User, TrendingUp, Compass, Bookmark, Clock, LayoutDashboard, Shield, Crown, CreditCard, Palette, MessagesSquare, UserPlus, LogOut, Bell, Zap, Video, Music, Sparkles, Download } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/Avatar'
 import { getInitials } from '../lib/utils'
@@ -17,9 +17,13 @@ const Sidebar = () => {
     { name: 'Discover', icon: Compass, path: '/search' },
     { name: 'Trending', icon: TrendingUp, path: '/trending' },
     { name: 'Movies', icon: Film, path: '/movies' },
+    { name: 'Shorts', icon: Video, path: '/shorts' },
+    { name: 'Music', icon: Music, path: '/music' },
+    { name: 'Animations', icon: Sparkles, path: '/animations' },
     { name: 'Wishlist', icon: Heart, path: '/wishlist' },
     { name: 'Watch Later', icon: Bookmark, path: '/watch-later' },
     { name: 'History', icon: Clock, path: '/history' },
+    { name: 'Downloads', icon: Download, path: '/downloads' },
   ]
 
   const socialNavItems = [

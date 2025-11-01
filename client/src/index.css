@@ -278,3 +278,166 @@
 .dark .badge-danger {
   background-color: rgb(127 29 29 / 0.3);
 }
+
+/* Social Feed Enhancements */
+.social-post {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.social-post:hover {
+  @apply shadow-xl;
+}
+
+/* Real-time Update Animations */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+}
+
+.new-content {
+  animation: slideInFromTop 0.5s ease-out, pulse-glow 2s ease-in-out;
+}
+
+/* Smooth Scrollbar for Comments */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply rounded-full;
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(59, 130, 246, 0.4);
+}
+
+/* Interactive Elements */
+.interactive-element {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+.interactive-element:hover {
+  @apply scale-105;
+}
+
+.interactive-element:active {
+  @apply scale-95;
+}
+
+/* Reaction Animations */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.reaction-animate {
+  animation: bounce-in 0.3s ease-out;
+}
+
+/* Loading Spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Notification Badge */
+.notification-badge {
+  @apply absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Enhanced Card Interactive */
+.card-interactive {
+  @apply transition-all duration-300 ease-in-out cursor-pointer;
+}
+
+.card-interactive:hover {
+  @apply transform -translate-y-1 shadow-2xl;
+}
+
+/* Gradient Text Animation */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.text-gradient-animated {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Skeleton Loader for Social Feed */
+.skeleton-post {
+  @apply animate-pulse rounded-lg;
+  background-color: rgba(241, 245, 249, 0.5);
+  height: 200px;
+}
+
+.dark .skeleton-post {
+  background-color: rgba(30, 41, 59, 0.5);
+}
+
+/* PWA Install Prompt */
+.pwa-prompt {
+  @apply fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card border-2 border-primary rounded-lg shadow-2xl p-4 z-50;
+  animation: slideInFromTop 0.5s ease-out;
+}
+
+/* Offline Indicator */
+.offline-indicator {
+  @apply fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 z-50;
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+/* Online Indicator */
+.online-indicator {
+  @apply fixed top-0 left-0 right-0 bg-green-500 text-white text-center py-2 z-50;
+  animation: slideInFromTop 0.3s ease-out;
+}

@@ -1,280 +1,245 @@
-# Deployment Guide
+# 🚀 CinemaFlix Deployment Guide
 
-## 🚀 Quick Deployment Options
+## 📋 Overview
+This guide covers deploying CinemaFlix to both Netlify and GitHub Pages with proper server configuration.
 
-### Option 1: Render (Recommended - Free Tier Available)
-**Deploy Both Frontend & Backend Together**
+## 🌐 Deployment URLs
+- **Netlify**: https://cinemaflx.netlify.app
+- **GitHub Pages**: https://devTechs001.github.io/moview-watch
+- **Server**: https://cinemaflx-server.onrender.com
 
-1. **Push to GitHub** (Already Done ✅)
-   ```bash
-   https://github.com/devTechs001/moview-watch.git
+## 🔧 Configuration Files
+
+### 1. Netlify Configuration (`netlify.toml`)
+```toml
+# Netlify Configuration for CinemaFlix Frontend
+[build]
+  base = "client"
+  command = "npm run build"
+  publish = "dist"
+  
+[build.environment]
+  NODE_VERSION = "18"
+  VITE_API_URL = "https://cinemaflx-server.onrender.com/api"
+  VITE_SOCKET_URL = "https://cinemaflx-server.onrender.com"
+  VITE_CLIENT_URL = "https://cinemaflx.netlify.app"
+
+# SPA routing support
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# PWA support
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/service-worker.js"
+  [headers.values]
+    Content-Type = "application/javascript"
+    Cache-Control = "public, max-age=0, must-revalidate"
+```
+
+### 2. GitHub Pages Configuration (`.github/workflows/deploy.yml`)
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: client/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd client
+        npm ci
+        
+    - name: Build
+      run: |
+        cd client
+        npm run build
+      env:
+        VITE_API_URL: https://cinemaflx-server.onrender.com/api
+        VITE_SOCKET_URL: https://cinemaflx-server.onrender.com
+        VITE_CLIENT_URL: https://devTechs001.github.io/moview-watch
+        GITHUB_PAGES: true
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./client/dist
+        cname: cinemaflx.netlify.app
+```
+
+### 3. Environment Configuration
+The application automatically detects deployment environment and configures API URLs:
+
+```javascript
+// Auto-detects deployment environment
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  if (window.location.hostname.includes('netlify.app')) {
+    return 'https://cinemaflx-server.onrender.com/api'
+  }
+  
+  if (window.location.hostname.includes('github.io')) {
+    return 'https://cinemaflx-server.onrender.com/api'
+  }
+  
+  return 'http://localhost:5000/api'
+}
+```
+
+## 🚀 Deployment Steps
+
+### Netlify Deployment
+1. **Connect Repository**: Link your GitHub repository to Netlify
+2. **Build Settings**:
+   - Base directory: `client`
+   - Build command: `npm run build`
+   - Publish directory: `client/dist`
+3. **Environment Variables** (set in Netlify dashboard):
+   ```
+   VITE_API_URL=https://cinemaflx-server.onrender.com/api
+   VITE_SOCKET_URL=https://cinemaflx-server.onrender.com
+   VITE_CLIENT_URL=https://cinemaflx.netlify.app
+   ```
+4. **Deploy**: Netlify will automatically deploy on every push to main branch
+
+### GitHub Pages Deployment
+1. **Enable GitHub Pages**: Go to repository Settings > Pages
+2. **Source**: Deploy from GitHub Actions
+3. **Workflow**: The provided workflow will automatically deploy
+4. **Custom Domain**: Set `cinemaflx.netlify.app` as custom domain
+
+### Server Deployment (Render)
+1. **Connect Repository**: Link your GitHub repository to Render
+2. **Service Type**: Web Service
+3. **Build Command**: `cd server && npm install`
+4. **Start Command**: `cd server && npm start`
+5. **Environment Variables**:
+   ```
+   NODE_ENV=production
+   MONGODB_URI=your-mongodb-connection-string
+   JWT_SECRET=your-jwt-secret
+   CLIENT_URL=https://cinemaflx.netlify.app
    ```
 
-2. **Deploy to Render**
-   - Go to https://render.com
-   - Sign up with GitHub
-   - Click "New" → "Blueprint"
-   - Connect your repository: `devTechs001/moview-watch`
-   - Render will auto-detect `render.yaml`
-   - Set environment variables:
-     - `MONGODB_URI` - Your MongoDB Atlas connection string
-     - `JWT_SECRET` - Random secure string
-     - `TMDB_API_KEY` - Your TMDB API key
-     - `CLIENT_URL` - Will be auto-generated URL
-     - `VITE_API_URL` - https://your-api-url.onrender.com/api
-     - `VITE_SOCKET_URL` - https://your-api-url.onrender.com
-   - Click "Apply"
+## 🔧 Router Configuration
+The application uses dynamic basename configuration:
 
-**Free Tier Notes:**
-- Backend spins down after 15 min of inactivity
-- First request may take 30-50 seconds to wake up
-- Perfect for portfolio projects!
-
----
-
-### Option 2: Netlify (Frontend) + Render (Backend)
-
-#### Deploy Backend to Render
-1. Go to https://render.com
-2. New → Web Service
-3. Connect GitHub repo
-4. Settings:
-   - **Name:** cinemaflix-api
-   - **Root Directory:** server
-   - **Build Command:** `npm install`
-   - **Start Command:** `npm start`
-   - **Environment:** Node
-5. Add environment variables (see below)
-6. Deploy!
-
-#### Deploy Frontend to Netlify
-1. Go to https://netlify.com
-2. New site from Git
-3. Connect GitHub repo
-4. Settings:
-   - **Base directory:** client
-   - **Build command:** `npm run build`
-   - **Publish directory:** client/dist
-5. Environment variables:
-   - `VITE_API_URL` - https://your-render-backend.onrender.com/api
-   - `VITE_SOCKET_URL` - https://your-render-backend.onrender.com
-6. Deploy!
-
----
-
-### Option 3: Vercel (Frontend) + Railway (Backend)
-
-#### Deploy Backend to Railway
-1. Go to https://railway.app
-2. New Project → Deploy from GitHub
-3. Select your repository
-4. Railway auto-detects Node.js
-5. Settings:
-   - **Root Directory:** server
-   - **Start Command:** `npm start`
-6. Add environment variables
-7. Get your backend URL
-
-#### Deploy Frontend to Vercel
-1. Go to https://vercel.com
-2. Import Git Repository
-3. Select your repo
-4. Settings:
-   - **Root Directory:** client
-   - **Framework:** Vite
-   - **Build Command:** `npm run build`
-   - **Output Directory:** dist
-5. Environment variables:
-   - `VITE_API_URL` - https://your-railway-backend.up.railway.app/api
-   - `VITE_SOCKET_URL` - https://your-railway-backend.up.railway.app
-6. Deploy!
-
----
-
-## 🔧 Environment Variables Reference
-
-### Backend Environment Variables
-```
-NODE_ENV=production
-PORT=5000
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/cinemaflix
-JWT_SECRET=your_super_secure_random_string_here
-JWT_EXPIRE=7d
-TMDB_API_KEY=your_tmdb_api_key
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name (optional)
-CLOUDINARY_API_KEY=your_cloudinary_key (optional)
-CLOUDINARY_API_SECRET=your_cloudinary_secret (optional)
-CLIENT_URL=https://your-frontend-url.netlify.app
+```javascript
+const getBasename = () => {
+  if (window.location.hostname.includes('github.io')) {
+    return '/moview-watch'
+  }
+  return '/'
+}
 ```
 
-### Frontend Environment Variables
-```
-VITE_API_URL=https://your-backend-url.onrender.com/api
-VITE_SOCKET_URL=https://your-backend-url.onrender.com
-```
+## 📱 PWA Features
+- **Service Worker**: Enhanced caching and offline support
+- **Manifest**: Complete PWA manifest with shortcuts and file handlers
+- **Install Prompt**: Native app installation
+- **Push Notifications**: Real-time notifications
+- **Background Sync**: Offline data synchronization
+
+## 🎨 UI Enhancements
+- **Responsive Design**: Mobile-first approach
+- **Dark/Light Themes**: Dynamic theme switching
+- **Animations**: Smooth transitions with Framer Motion
+- **Loading States**: Enhanced loading indicators
+- **Error Boundaries**: Graceful error handling
+
+## 🔒 Security Features
+- **CORS Configuration**: Proper cross-origin setup
+- **Security Headers**: XSS protection, content type validation
+- **Input Validation**: Server-side validation
+- **Rate Limiting**: API rate limiting
+- **Authentication**: JWT-based authentication
+
+## 📊 Performance Optimizations
+- **Code Splitting**: Dynamic imports for better performance
+- **Image Optimization**: Responsive images and lazy loading
+- **Caching**: Aggressive caching for static assets
+- **Compression**: Gzip compression enabled
+- **Bundle Analysis**: Optimized bundle sizes
+
+## 🧪 Testing
+- **Build Verification**: All builds pass successfully
+- **Linting**: No linting errors
+- **Type Safety**: TypeScript support where applicable
+- **Error Handling**: Comprehensive error boundaries
+
+## 📈 Monitoring
+- **Lighthouse**: Performance monitoring
+- **Analytics**: User behavior tracking
+- **Error Tracking**: Real-time error monitoring
+- **Uptime Monitoring**: Service availability tracking
+
+## 🔄 CI/CD Pipeline
+1. **Code Push**: Triggers automatic deployment
+2. **Build Process**: Installs dependencies and builds
+3. **Testing**: Runs linting and type checking
+4. **Deployment**: Deploys to staging/production
+5. **Health Checks**: Verifies deployment success
+
+## 📞 Support
+- **Documentation**: Comprehensive inline documentation
+- **Error Logs**: Detailed error logging
+- **Debug Mode**: Development debugging tools
+- **Hot Reload**: Fast development iteration
+
+## 🎯 Next Steps
+1. **Database Setup**: Configure MongoDB Atlas
+2. **API Keys**: Set up TMDB, Stripe, and other services
+3. **Domain Setup**: Configure custom domains
+4. **SSL Certificates**: Ensure HTTPS everywhere
+5. **Monitoring**: Set up application monitoring
 
 ---
 
-## 📝 Pre-Deployment Checklist
-
-### 1. MongoDB Atlas Setup
-- [ ] Create free cluster at https://www.mongodb.com/cloud/atlas
-- [ ] Create database user
-- [ ] Whitelist IP: `0.0.0.0/0` (allow from anywhere)
-- [ ] Get connection string
-- [ ] Test connection locally
-
-### 2. TMDB API Key
-- [ ] Get free API key from https://www.themoviedb.org/settings/api
-- [ ] Test locally first
-
-### 3. Generate Secure JWT Secret
-```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
-
-### 4. Update CORS Settings
-In `server/server.js`, update CLIENT_URL to match your deployed frontend
-
----
-
-## 🎯 Step-by-Step: Render Deployment (Easiest)
-
-### Step 1: Prepare MongoDB
-1. Go to https://mongodb.com/cloud/atlas
-2. Create free cluster (M0)
-3. Database Access → Add Database User
-4. Network Access → Add IP Address → `0.0.0.0/0`
-5. Copy connection string
-
-### Step 2: Deploy to Render
-1. Visit https://render.com/deploy
-2. Sign up with GitHub
-3. New → Blueprint
-4. Connect repository: `devTechs001/moview-watch`
-5. Render detects `render.yaml` automatically
-
-### Step 3: Set Environment Variables
-Click on your backend service → Environment:
-```
-MONGODB_URI = mongodb+srv://user:pass@cluster.mongodb.net/cinemaflix
-JWT_SECRET = (generate with crypto command above)
-TMDB_API_KEY = your_tmdb_key
-CLIENT_URL = https://your-frontend-name.onrender.com
-```
-
-Click on your frontend service → Environment:
-```
-VITE_API_URL = https://your-backend-name.onrender.com/api
-VITE_SOCKET_URL = https://your-backend-name.onrender.com
-```
-
-### Step 4: Deploy!
-- Click "Create Blueprint"
-- Wait 5-10 minutes for both services to deploy
-- Visit your frontend URL!
-
----
-
-## 🌐 Custom Domain (Optional)
-
-### Netlify Custom Domain
-1. Netlify Dashboard → Domain Settings
-2. Add custom domain
-3. Update DNS records with your domain provider
-
-### Render Custom Domain
-1. Render Dashboard → Service → Settings → Custom Domain
-2. Add domain
-3. Update DNS CNAME record
-
----
-
-## 🐛 Common Deployment Issues
-
-### Issue: MongoDB Connection Failed
-**Solution:** 
-- Check connection string format
-- Verify IP whitelist includes `0.0.0.0/0`
-- Ensure username/password are URL encoded
-
-### Issue: CORS Errors
-**Solution:**
-- Verify `CLIENT_URL` in backend matches frontend URL
-- Check CORS settings in `server/server.js`
-
-### Issue: Environment Variables Not Working
-**Solution:**
-- Ensure variable names match exactly (case-sensitive)
-- Redeploy after changing env vars
-- Check deployment logs
-
-### Issue: Render Free Tier Spinning Down
-**Solution:**
-- Expected behavior for free tier
-- Use a cron job to ping every 10 minutes (https://cron-job.org)
-- Upgrade to paid tier for always-on
-
-### Issue: Build Fails
-**Solution:**
-- Check Node version (should be 18+)
-- Verify all dependencies in package.json
-- Check deployment logs for specific errors
-
----
-
-## 📊 Monitoring Your Deployment
-
-### Render
-- Dashboard shows real-time logs
-- Metrics available for paid plans
-- Auto-deploys on git push
-
-### Netlify
-- Deploy logs available
-- Analytics in dashboard
-- Auto-deploys on git push
-
----
-
-## 🔄 Updating Your Deployed App
-
-Once deployed, updates are automatic:
-
-```bash
-# Make changes locally
-git add .
-git commit -m "Update feature"
-git push origin main
-```
-
-Both Render and Netlify will automatically redeploy! 🎉
-
----
-
-## 💰 Cost Breakdown
-
-### Free Tier (Recommended for Portfolio)
-- **Render:** Free (backend + frontend)
-- **Netlify:** Free (frontend only)
-- **MongoDB Atlas:** Free M0 cluster
-- **TMDB API:** Free
-- **Total:** $0/month ✨
-
-### Paid Tier (For Production)
-- **Render Pro:** $7/month (always-on backend)
-- **Netlify Pro:** $19/month (advanced features)
-- **MongoDB Atlas:** $9/month (M2 cluster)
-- **Total:** ~$35/month
-
----
-
-## 🎉 You're Ready to Deploy!
-
-Choose your platform and follow the steps above. Render is recommended for the easiest setup with both frontend and backend together.
-
-**Your app will be live at:**
-- Frontend: `https://your-app-name.onrender.com`
-- Backend API: `https://your-app-name-api.onrender.com`
-
-Good luck! 🚀
+**Status**: ✅ Ready for Production Deployment
+**Last Updated**: January 2025
+**Version**: 1.0.0

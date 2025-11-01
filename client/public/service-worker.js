@@ -1,16 +1,22 @@
-// Enhanced Service Worker for CinemaFlix PWA
-const CACHE_NAME = 'cinemaflix-v1.0.0'
-const STATIC_CACHE = 'cinemaflix-static-v1.0.0'
-const DYNAMIC_CACHE = 'cinemaflix-dynamic-v1.0.0'
+// Enhanced Service Worker for CinemaFlix PWA with Real-time Updates
+const CACHE_VERSION = '1.1.0'
+const CACHE_NAME = `cinemaflix-v${CACHE_VERSION}`
+const STATIC_CACHE = `cinemaflix-static-v${CACHE_VERSION}`
+const DYNAMIC_CACHE = `cinemaflix-dynamic-v${CACHE_VERSION}`
+const API_CACHE = `cinemaflix-api-v${CACHE_VERSION}`
+
+// Cache duration for API responses (5 minutes)
+const API_CACHE_DURATION = 5 * 60 * 1000
 
 // Assets to cache
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/favicon.ico'
+  '/icon-192.png',
+  '/icon-512.png',
+  '/favicon.ico',
+  '/offline.html'
 ]
 
 // Install event - cache static assets
@@ -40,7 +46,7 @@ self.addEventListener('activate', (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE && cacheName !== API_CACHE) {
               console.log('[SW] Deleting old cache:', cacheName)
               return caches.delete(cacheName)
             }
@@ -54,7 +60,7 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-// Fetch event - serve from cache with network fallback
+// Fetch event - Network First for API, Cache First for assets
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
@@ -64,45 +70,61 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Skip external requests
-  if (url.origin !== location.origin) {
+  // API requests - Network First with cache fallback
+  if (url.pathname.startsWith('/api/') || url.pathname.includes('/posts') || url.pathname.includes('/social')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone()
+            caches.open(API_CACHE).then((cache) => {
+              cache.put(request, responseToCache)
+            })
+          }
+          return response
+        })
+        .catch(() => {
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              console.log('[SW] Serving API from cache:', request.url)
+              return cachedResponse
+            }
+            return new Response(JSON.stringify({ error: 'Offline', cached: false }), {
+              headers: { 'Content-Type': 'application/json' }
+            })
+          })
+        })
+    )
     return
   }
 
+  // Static assets - Cache First with network fallback
   event.respondWith(
     caches.match(request)
       .then((cachedResponse) => {
-        // Return cached version if available
         if (cachedResponse) {
           console.log('[SW] Serving from cache:', request.url)
           return cachedResponse
         }
 
-        // Fetch from network
         return fetch(request)
           .then((response) => {
-            // Don't cache non-successful responses
-            if (!response || response.status !== 200 || response.type !== 'basic') {
+            if (!response || response.status !== 200) {
               return response
             }
 
-            // Clone the response
             const responseToCache = response.clone()
-
-            // Cache dynamic content
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseToCache)
-              })
+            caches.open(DYNAMIC_CACHE).then((cache) => {
+              cache.put(request, responseToCache)
+            })
 
             return response
           })
           .catch((error) => {
             console.error('[SW] Fetch failed:', error)
             
-            // Return offline page for navigation requests
             if (request.mode === 'navigate') {
-              return caches.match('/index.html')
+              return caches.match('/offline.html')
             }
             
             throw error

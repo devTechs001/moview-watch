@@ -1,7 +1,8 @@
 import AIMonitoring from '../models/AIMonitoring.js'
 import ActivityLog from '../models/ActivityLog.js'
 import Notification from '../models/Notification.js'
-import { moderateContent } from '../services/aiMonitoringService.js'
+// AI monitoring service - using direct models instead
+// import { moderateContent } from '../services/aiMonitoringService.js'
 
 // Get all monitoring alerts
 export const getAlerts = async (req, res) => {
@@ -158,16 +159,42 @@ export const moderateContentManual = async (req, res) => {
   try {
     const { content, contentType, contentId } = req.body
 
-    const result = await moderateContent(content, contentType, req.user._id, contentId)
+    // Simple inline moderation
+    const inappropriatePatterns = [
+      /\b(spam|scam|fake)\b/gi,
+      /\b(hate|racist|offensive)\b/gi,
+      /<script|javascript:|onerror=/gi,
+    ]
+
+    let isInappropriate = false
+    const flags = []
+
+    for (const pattern of inappropriatePatterns) {
+      if (pattern.test(content)) {
+        isInappropriate = true
+        flags.push(pattern.toString())
+      }
+    }
+
+    if (isInappropriate) {
+      await AIMonitoring.create({
+        type: 'content',
+        severity: 'medium',
+        category: 'manual_review',
+        user: req.user._id,
+        contentType,
+        contentId,
+        description: 'Content flagged by manual moderation',
+        detectedPatterns: flags,
+      })
+    }
 
     res.json({
-      result,
-      message: result.isInappropriate
-        ? 'Content flagged for review'
-        : 'Content approved',
+      result: { isInappropriate, flags },
+      message: isInappropriate ? 'Content flagged' : 'Content approved',
     })
   } catch (error) {
-    res.status(500).json({ message: 'Failed to moderate content', error: error.message })
+    res.status(500).json({ message: error.message })
   }
 }
 

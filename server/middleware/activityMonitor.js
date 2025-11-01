@@ -1,4 +1,6 @@
-import { monitorUserActivity, detectBreach } from '../services/aiMonitoringService.js'
+// AI monitoring service temporarily disabled
+// import { monitorUserActivity, detectBreach } from '../services/aiMonitoringService.js'
+import ActivityLog from '../models/ActivityLog.js'
 
 // Middleware to log all user activities
 export const activityLogger = async (req, res, next) => {
@@ -29,7 +31,12 @@ export const activityLogger = async (req, res, next) => {
       if (req.user) {
         const action = determineAction(req.method, req.path)
         if (action) {
-          await monitorUserActivity(req.user._id, action, metadata)
+          // Direct logging instead of service
+          await ActivityLog.create({
+            user: req.user._id,
+            action,
+            ...metadata,
+          })
         }
       }
     } catch (error) {
@@ -60,9 +67,11 @@ export const breachDetector = async (req, res, next) => {
     if (req.query && Object.keys(req.query).length > 0) {
       const queryString = JSON.stringify(req.query)
       metadata.query = queryString
-      const breach = await detectBreach('sql_injection', metadata)
+      // Simple SQL injection detection
+      const sqlPatterns = /('|(--)|;|(\|\|)|(union|select|insert|update|delete|drop))/gi
+      const hasSQLInjection = sqlPatterns.test(queryString)
       
-      if (breach && breach.detected) {
+      if (hasSQLInjection) {
         return res.status(403).json({
           message: 'Suspicious activity detected',
           code: 'BREACH_DETECTED',
@@ -73,10 +82,10 @@ export const breachDetector = async (req, res, next) => {
     // Check for XSS in request body
     if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
       const bodyContent = JSON.stringify(req.body)
-      metadata.content = bodyContent
-      const breach = await detectBreach('xss_attempt', metadata)
+      const xssPatterns = /<script|javascript:|onerror=|onload=/gi
+      const hasXSS = xssPatterns.test(bodyContent)
       
-      if (breach && breach.detected) {
+      if (hasXSS) {
         return res.status(403).json({
           message: 'Suspicious content detected',
           code: 'XSS_DETECTED',

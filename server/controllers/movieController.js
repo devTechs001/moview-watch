@@ -162,10 +162,38 @@ export const likeMovie = async (req, res) => {
       return res.status(404).json({ message: 'Movie not found' })
     }
 
-    movie.likes += 1
+    const alreadyLiked = movie.likedBy.includes(req.user._id)
+
+    if (alreadyLiked) {
+      // Unlike
+      movie.likedBy = movie.likedBy.filter(
+        (id) => id.toString() !== req.user._id.toString()
+      )
+      movie.likes = Math.max(0, movie.likes - 1)
+    } else {
+      // Like
+      movie.likedBy.push(req.user._id)
+      movie.likes += 1
+    }
+
     await movie.save()
 
-    res.json({ likes: movie.likes })
+    // Emit Socket.IO event
+    const io = req.app.get('io')
+    if (io) {
+      io.emit('movie_liked', {
+        movieId: movie._id,
+        userId: req.user._id,
+        liked: !alreadyLiked,
+        likeCount: movie.likes,
+      })
+    }
+
+    res.json({ 
+      likes: movie.likes, 
+      liked: !alreadyLiked,
+      likedBy: movie.likedBy 
+    })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
