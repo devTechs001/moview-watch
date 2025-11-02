@@ -26,7 +26,7 @@ const HomePage = () => {
     try {
       setLoading(true)
       const params = selectedCategory !== 'All' ? { genre: selectedCategory } : {}
-      const response = await axios.get('/movies', { params })
+  const response = await axios.get('/api/movies', { params })
       setMovies(response.data.movies || [])
     } catch (error) {
       console.error('Error fetching movies:', error)
@@ -39,7 +39,7 @@ const HomePage = () => {
 
   const fetchFeaturedMovie = async () => {
     try {
-      const response = await axios.get('/movies/featured')
+  const response = await axios.get('/api/movies/featured')
       setFeaturedMovie(response.data.movie)
     } catch (error) {
       // Use demo featured movie

@@ -118,7 +118,11 @@ const AdminDashboard = () => {
                 <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <Film className="w-6 h-6 text-blue-500" />
                 </div>
-                <span className="text-sm text-green-500 font-semibold">+12%</span>
+                {stats.movieGrowth ? (
+                  <span className={`text-sm font-semibold ${stats.movieGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {stats.movieGrowth >= 0 ? '+' : ''}{stats.movieGrowth}%
+                  </span>
+                ) : null}
               </div>
               <div className="text-2xl font-bold mb-1">{stats.totalMovies.toLocaleString()}</div>
               <p className="text-sm text-muted-foreground">Total Movies</p>
@@ -146,7 +150,11 @@ const AdminDashboard = () => {
                 <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
                   <DollarSign className="w-6 h-6 text-green-500" />
                 </div>
-                <span className="text-sm text-green-500 font-semibold">+8%</span>
+                {stats.revenueGrowth ? (
+                  <span className={`text-sm font-semibold ${stats.revenueGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {stats.revenueGrowth >= 0 ? '+' : ''}{stats.revenueGrowth}%
+                  </span>
+                ) : null}
               </div>
               <div className="text-2xl font-bold mb-1">${stats.totalRevenue.toLocaleString()}</div>
               <p className="text-sm text-muted-foreground">Total Revenue</p>

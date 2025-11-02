@@ -15,7 +15,7 @@ export const useAuthStore = create((set) => ({
         return
       }
 
-      const response = await axios.get('/auth/me')
+  const response = await axios.get('/api/auth/me')
       set({ user: response.data.user, isAuthenticated: true, isLoading: false })
     } catch (error) {
       localStorage.removeItem('token')
@@ -25,7 +25,7 @@ export const useAuthStore = create((set) => ({
 
   login: async (email, password) => {
     try {
-      const response = await axios.post('/auth/login', { email, password })
+  const response = await axios.post('/api/auth/login', { email, password })
       localStorage.setItem('token', response.data.token)
       set({ user: response.data.user, isAuthenticated: true })
       toast.success('Login successful!')
@@ -38,7 +38,7 @@ export const useAuthStore = create((set) => ({
 
   register: async (userData) => {
     try {
-      const response = await axios.post('/auth/register', userData)
+  const response = await axios.post('/api/auth/register', userData)
       localStorage.setItem('token', response.data.token)
       set({ user: response.data.user, isAuthenticated: true })
       toast.success('Registration successful!')

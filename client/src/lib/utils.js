@@ -13,15 +13,15 @@ const getApiUrl = () => {
   
   // Auto-detect deployment environment
   if (window.location.hostname.includes('netlify.app')) {
-    return 'https://cinemaflx-server.onrender.com/api'
+    return 'https://cinemaflx-server.onrender.com'
   }
-  
+
   if (window.location.hostname.includes('github.io')) {
-    return 'https://cinemaflx-server.onrender.com/api'
+    return 'https://cinemaflx-server.onrender.com'
   }
-  
+
   // Local development
-  return 'http://localhost:5000/api'
+  return 'http://localhost:5000'
 }
 
 const getSocketUrl = () => {

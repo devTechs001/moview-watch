@@ -58,16 +58,42 @@ export const getStats = async (req, res) => {
     const lastMonth = new Date(thisMonth)
     lastMonth.setMonth(lastMonth.getMonth() - 1)
     
+    // Calculate user growth
     const lastMonthUsers = await User.countDocuments({
       createdAt: { $gte: lastMonth, $lt: thisMonth }
     })
-    
     const thisMonthUsers = await User.countDocuments({
       createdAt: { $gte: thisMonth }
     })
-    
     const userGrowth = lastMonthUsers > 0 
       ? ((thisMonthUsers - lastMonthUsers) / lastMonthUsers * 100).toFixed(1)
+      : 0
+
+    // Calculate movie growth
+    const lastMonthMovies = await Movie.countDocuments({
+      createdAt: { $gte: lastMonth, $lt: thisMonth }
+    })
+    const thisMonthMovies = await Movie.countDocuments({
+      createdAt: { $gte: thisMonth }
+    })
+    const movieGrowth = lastMonthMovies > 0 
+      ? ((thisMonthMovies - lastMonthMovies) / lastMonthMovies * 100).toFixed(1)
+      : 0
+
+    // Calculate revenue growth
+    const lastMonthRevenue = await Payment.aggregate([
+      { 
+        $match: { 
+          status: 'completed',
+          createdAt: { $gte: lastMonth, $lt: thisMonth }
+        } 
+      },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ])
+    const lastMonthTotal = lastMonthRevenue[0]?.total || 0
+    const thisMonthTotal = monthlyRevenue[0]?.total || 0
+    const revenueGrowth = lastMonthTotal > 0 
+      ? ((thisMonthTotal - lastMonthTotal) / lastMonthTotal * 100).toFixed(1)
       : 0
     
     // Get recent activity
@@ -98,6 +124,9 @@ export const getStats = async (req, res) => {
         totalViews: totalViews[0]?.total || 0,
         totalComments,
         totalPosts,
+        userGrowth: parseFloat(userGrowth),
+        movieGrowth: parseFloat(movieGrowth),
+        revenueGrowth: parseFloat(revenueGrowth),
         activeUsers,
         totalRevenue,
         monthlyRevenue: monthlyRevenue[0]?.total || 0,

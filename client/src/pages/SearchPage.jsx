@@ -34,7 +34,7 @@ const SearchPage = () => {
         search: searchQuery,
         ...filters,
       }
-      const response = await axios.get('/movies/search', { params })
+  const response = await axios.get('/api/movies/search', { params })
       setMovies(response.data.movies || [])
     } catch (error) {
       console.error('Error searching movies:', error)

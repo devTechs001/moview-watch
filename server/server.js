@@ -10,6 +10,7 @@ import connectDB from './config/db.js'
 import errorHandler from './middleware/errorHandler.js'
 import { activityLogger, breachDetector } from './middleware/activityMonitor.js'
 import aiMonitorMiddleware from './middleware/aiMonitoring.js'
+import { handleBrokenImages } from './middleware/imageHandler.js'
 
 // Import routes
 import authRoutes from './routes/authRoutes.js'
@@ -37,6 +38,8 @@ import aiRecommendationRoutes from './routes/aiRecommendationRoutes.js'
 import adminRealtimeRoutes from './routes/adminRealtimeRoutes.js'
 import chatroomManagementRoutes from './routes/chatroomManagementRoutes.js'
 import contentLibraryRoutes from './routes/contentLibraryRoutes.js'
+import musicRoutes from './routes/musicRoutes.js'
+import shortsRoutes from './routes/shortsRoutes.js'
 
 // Load env vars
 dotenv.config()
@@ -76,16 +79,29 @@ const httpServer = createServer(app)
 // Initialize Socket.IO
 const io = new Server(httpServer, {
   cors: {
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:5175',
-      'http://localhost:5176',
-      'http://localhost:3000',
-      process.env.CLIENT_URL
-    ].filter(Boolean),
+    origin: function(origin, callback) {
+      // Allow requests with no origin (mobile apps, tools)
+      if (!origin) return callback(null, true);
+      
+      // Allow all localhost origins
+      if (origin.includes('localhost')) return callback(null, true);
+      
+      // Allow specific domains
+      const allowedDomains = [
+        'https://cinemaflxc.netlify.app',
+        'https://cinemaflx-server.onrender.com',
+        process.env.CLIENT_URL
+      ].filter(Boolean);
+      
+      if (allowedDomains.some(domain => origin.includes(domain))) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   },
 })
 
@@ -94,29 +110,38 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }))
+// Enhanced CORS middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:5175',
-      'http://localhost:5176',
-      'http://localhost:3000',
-      process.env.CLIENT_URL
-    ].filter(Boolean)
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, tools)
+    if (!origin) return callback(null, true);
     
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true)
+    // Allow all localhost origins
+    if (origin.includes('localhost')) return callback(null, true);
+    
+    // Allow specific domains
+    const allowedDomains = [
+      'https://cinemaflxc.netlify.app',
+      'https://cinemaflx-server.onrender.com',
+      process.env.CLIENT_URL
+    ].filter(Boolean);
+    
+    if (allowedDomains.some(domain => origin.includes(domain))) {
+      callback(null, true);
     } else {
-      callback(null, true) // Allow all in development
+      console.log('🚫 Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 86400,
 }))
+
+// Pre-flight OPTIONS handler
+app.options('*', cors())
 app.use(compression())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -138,6 +163,48 @@ if (process.env.AI_MONITORING_ENABLED !== 'false') {
 // Make io accessible to routes
 app.set('io', io)
 
+// Socket.IO event handlers
+io.on('connection', (socket) => {
+  console.log('🔌 Client connected:', socket.id);
+
+  // Join movie room for real-time updates
+  socket.on('joinMovie', (movieId) => {
+    socket.join(`movie:${movieId}`);
+    console.log(`Socket ${socket.id} joined movie room: ${movieId}`);
+  });
+
+  // Join short room for real-time updates
+  socket.on('joinShort', (shortId) => {
+    socket.join(`short:${shortId}`);
+    console.log(`Socket ${socket.id} joined short room: ${shortId}`);
+  });
+
+  // Handle real-time comments
+  socket.on('comment', async (data) => {
+    try {
+      const { movieId, comment, userId } = data;
+      // Broadcast to all clients in the movie room
+      io.to(`movie:${movieId}`).emit('newComment', {
+        movieId,
+        comment,
+        userId,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      console.error('Comment error:', error);
+      socket.emit('error', { message: 'Failed to process comment' });
+    }
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('🔌 Client disconnected:', socket.id);
+  });
+});
+
+// Apply image handler middleware to all routes that might contain images
+app.use(['/api/movies', '/api/library/shorts', '/api/users'], handleBrokenImages);
+
 // Routes
 app.get('/', (req, res) => {
   res.json({ message: 'CinemaFlix API is running' })
@@ -148,6 +215,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/movies', movieRoutes)
+app.use('/api/library/music', musicRoutes)
+app.use('/api/library/shorts', shortsRoutes)
 app.use('/api/movies/import', movieImportRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/comments', commentRoutes)

@@ -15,10 +15,11 @@ export const getDownloadLinks = async (req, res) => {
     }
 
     // Check if user has permission to download
-    const user = await User.findById(req.user._id)
+    // Ensure subscription is populated so we can inspect its status
+    const user = await User.findById(req.user._id).populate('subscription')
     
     // Check subscription status
-    if (!user.subscription || user.subscription.status !== 'active') {
+    if (!user.subscription || (user.subscription.status && user.subscription.status !== 'active')) {
       return res.status(403).json({ 
         message: 'Active subscription required to download movies',
         code: 'SUBSCRIPTION_REQUIRED'

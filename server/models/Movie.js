@@ -4,8 +4,13 @@ const movieSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'Please provide a movie title'],
+      required: [true, 'Please provide a title'],
       trim: true,
+    },
+    contentType: {
+      type: String,
+      enum: ['movie', 'tv', 'animation', 'short_film', 'documentary'],
+      default: 'movie'
     },
     description: {
       type: String,
@@ -21,9 +26,13 @@ const movieSchema = new mongoose.Schema(
     trailer: {
       type: String,
     },
+    // videoUrl was previously required which caused imports/seeds without
+    // a real video url to fail on startup. Make it optional and default to
+    // an empty string so records can be created and updated later.
     videoUrl: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
     },
     year: {
       type: Number,
